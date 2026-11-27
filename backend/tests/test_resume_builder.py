@@ -103,17 +103,22 @@ def test_builder_create_draft_patch_versioning_and_ownership(client, db_session)
     assert created["version"]["masked_contact"]["github"] == "github.com/a***"
     assert "aarav-builder" not in str(created["version"]["masked_contact"])
 
-    # Update active draft v1 in place via PATCH (switches template + adds Go)
+    # Update active draft v1 in place via PATCH (switches template + adds Go to skills)
+    updated_sections = list(_sample_builder_payload()["sections"])
+    updated_sections[2] = {
+        **updated_sections[2],
+        "content_text": updated_sections[2]["content_text"] + ", Go",
+    }
     patch_payload = {
         "title": "Synthetic Fresher Portfolio Updated",
         "template_slug": "academic-editorial",
         "contact": _sample_builder_payload()["contact"],
         "sections": [
-            *_sample_builder_payload()["sections"],
+            *updated_sections,
             {
                 "section_type": "achievements",
                 "raw_heading": "ACHIEVEMENTS",
-                "content_text": "Built Go CLI utility & placed top 10 in campus hackathon.",
+                "content_text": "Top 10 finalist in Campus Hackathon (2026).",
             },
         ],
     }
