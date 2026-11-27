@@ -52,15 +52,6 @@ export interface JobRoleDetail extends JobRoleSummary {
   skills: RoleSkillItem[];
 }
 
-export interface SampleResumeSummary {
-  id: string;
-  title: string;
-  candidate_label: string | null;
-  template_slug: string;
-  word_count: number;
-  active_version_id: string;
-  sections_count: number;
-}
 
 export interface ParseWarning {
   code: string;
@@ -134,7 +125,6 @@ export interface ResumeDetail {
   id: string;
   title: string;
   source_type: string;
-  is_sample: boolean;
   active_version_id: string | null;
   created_at: string;
   updated_at: string;
@@ -146,7 +136,6 @@ export interface ResumeListItem {
   id: string;
   title: string;
   source_type: string;
-  is_sample: boolean;
   active_version_id: string | null;
   candidate_label: string | null;
   word_count: number;

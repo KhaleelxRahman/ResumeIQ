@@ -25,7 +25,6 @@ interface BuilderHeaderProps {
   versionId: string | null;
   versionNumber: number;
   versions: ResumeVersionSummary[];
-  isSample: boolean;
   templateSlug: BuilderTemplateSlug;
   saveStatus: SaveStatus;
   lastSavedAt: string | null;
@@ -39,7 +38,6 @@ interface BuilderHeaderProps {
   onSelectVersion: (versionId: string) => void;
   onCreateBlank: () => void;
   onLoadStarter: () => void;
-  onDuplicateSample: () => void;
   onSaveDraft: () => void;
   onSaveNewVersion: () => void;
   onExportPdf: () => void;
@@ -60,7 +58,6 @@ export function BuilderHeader({
   versionId,
   versionNumber,
   versions,
-  isSample,
   templateSlug,
   saveStatus,
   lastSavedAt,
@@ -74,7 +71,6 @@ export function BuilderHeader({
   onSelectVersion,
   onCreateBlank,
   onLoadStarter,
-  onDuplicateSample,
   onSaveDraft,
   onSaveNewVersion,
   onExportPdf,
@@ -159,7 +155,6 @@ export function BuilderHeader({
           <input
             id="builder-resume-title"
             type="text"
-            disabled={isSample}
             value={title}
             aria-invalid={Boolean(titleError)}
             aria-describedby={titleError ? 'builder-title-error' : undefined}
@@ -176,7 +171,7 @@ export function BuilderHeader({
 
         <div className="lg:col-span-3">
           <label htmlFor="builder-load-resume" className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]">
-            Open Saved or Sample Resume
+            Open Saved Resume
           </label>
           <select
             id="builder-load-resume"
@@ -190,7 +185,7 @@ export function BuilderHeader({
             <option value="">Current unsaved draft</option>
             {availableResumes.map((item) => (
               <option key={item.id} value={item.id}>
-                {item.is_sample ? `[Sample] ${item.title}` : item.title}
+                {item.title}
               </option>
             ))}
           </select>
@@ -245,40 +240,26 @@ export function BuilderHeader({
         {/* Action buttons row */}
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border-hairline)] pt-3 lg:col-span-12">
           <div className="flex flex-wrap items-center gap-2">
-            {isSample ? (
+            <button
+              type="button"
+              disabled={anyBusy}
+              onClick={onSaveDraft}
+              className="inline-flex min-h-[42px] items-center gap-2 whitespace-nowrap shrink-0 rounded-lg bg-[var(--accent-primary)] px-4 text-xs font-semibold text-white hover:bg-[var(--accent-primary-hover)] disabled:opacity-50"
+            >
+              <Save size={15} aria-hidden="true" />
+              <span>{busyAction === 'save' ? 'Saving...' : 'Save Draft'}</span>
+            </button>
+
+            {resumeId && (
               <button
                 type="button"
                 disabled={anyBusy}
-                onClick={onDuplicateSample}
-                className="inline-flex min-h-[42px] items-center gap-2 whitespace-nowrap shrink-0 rounded-lg bg-[var(--accent-primary)] px-4 text-xs font-semibold text-white hover:bg-[var(--accent-primary-hover)] disabled:opacity-50"
+                onClick={onSaveNewVersion}
+                className="inline-flex min-h-[42px] items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg border border-[var(--border-strong)] bg-[var(--bg-elevated)] px-3.5 text-xs font-medium text-[var(--text-primary)] hover:border-[var(--accent-primary)] disabled:opacity-50"
               >
-                <CopyPlus size={15} aria-hidden="true" />
-                <span>Create Editable Copy</span>
+                <CopyPlus size={14} aria-hidden="true" />
+                <span>{busyAction === 'version' ? 'Saving Version...' : 'Save New Version'}</span>
               </button>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  disabled={anyBusy}
-                  onClick={onSaveDraft}
-                  className="inline-flex min-h-[42px] items-center gap-2 whitespace-nowrap shrink-0 rounded-lg bg-[var(--accent-primary)] px-4 text-xs font-semibold text-white hover:bg-[var(--accent-primary-hover)] disabled:opacity-50"
-                >
-                  <Save size={15} aria-hidden="true" />
-                  <span>{busyAction === 'save' ? 'Saving...' : 'Save Draft'}</span>
-                </button>
-
-                {resumeId && (
-                  <button
-                    type="button"
-                    disabled={anyBusy}
-                    onClick={onSaveNewVersion}
-                    className="inline-flex min-h-[42px] items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg border border-[var(--border-strong)] bg-[var(--bg-elevated)] px-3.5 text-xs font-medium text-[var(--text-primary)] hover:border-[var(--accent-primary)] disabled:opacity-50"
-                  >
-                    <CopyPlus size={14} aria-hidden="true" />
-                    <span>{busyAction === 'version' ? 'Saving Version...' : 'Save New Version'}</span>
-                  </button>
-                )}
-              </>
             )}
 
             <button
@@ -325,7 +306,7 @@ export function BuilderHeader({
               </button>
             </div>
 
-            {resumeId && !isSample && (
+            {resumeId && (
               <button
                 type="button"
                 disabled={anyBusy}

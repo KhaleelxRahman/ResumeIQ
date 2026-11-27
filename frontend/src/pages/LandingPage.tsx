@@ -2,22 +2,19 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle2, FileText, Layers } from 'lucide-react';
 import { fetchHealth, fetchJobRoles } from '../services/apiClient';
-import type { HealthResponse, JobRoleSummary } from '../types/api';
+import type { JobRoleSummary } from '../types/api';
 import { HeroVisualStage } from '../three/HeroVisualStage';
 
 export function LandingPage() {
   const [roles, setRoles] = useState<JobRoleSummary[]>([]);
-  const [health, setHealth] = useState<HealthResponse | null>(null);
   const [apiNotice, setApiNotice] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
     Promise.allSettled([fetchHealth(), fetchJobRoles()]).then(([healthRes, rolesRes]) => {
       if (!active) return;
-      if (healthRes.status === 'fulfilled') {
-        setHealth(healthRes.value);
-      } else {
-        setApiNotice('Backend API unavailable; retry when server is ready.');
+      if (healthRes.status === 'rejected') {
+        setApiNotice('Service unavailable; retry when ready.');
       }
       if (rolesRes.status === 'fulfilled') {
         setRoles(rolesRes.value);
@@ -34,7 +31,6 @@ export function LandingPage() {
         <div className="lg:col-span-7">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[var(--border-hairline)] bg-[var(--bg-surface)] px-3.5 py-1.5 font-mono-tabular text-xs text-[var(--accent-secondary)]">
             <span>01 // STUDENT-FIRST CAREER INTELLIGENCE</span>
-            {health && <span className="text-[var(--status-success)]">API READY</span>}
           </div>
 
           <h1 className="mb-5 text-4xl font-bold tracking-[-0.03em] leading-[1.05] text-[var(--text-primary)] sm:text-5xl lg:text-6xl">
@@ -104,7 +100,7 @@ export function LandingPage() {
               <span>Mandatory Career Target Taxonomies</span>
             </h2>
             <p className="text-sm text-[var(--text-secondary)]">
-              Seeded directly from the Flask API database alongside Custom Job Description matching.
+              Role taxonomies loaded from the ResumeIQ catalog alongside Custom Job Description matching.
             </p>
           </div>
           {apiNotice && (

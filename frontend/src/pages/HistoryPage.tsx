@@ -5,7 +5,7 @@ export function HistoryPage() {
     <div className="mx-auto max-w-[1120px] px-4 py-12 sm:px-6">
       <div className="rounded-xl border border-[var(--border-hairline)] bg-[var(--bg-surface)] p-8">
         <span className="font-mono-tabular text-xs text-[var(--accent-secondary)]">
-          PROGRESS &amp; VERSION HISTORY // PHASE 10 TARGET
+          PROGRESS &amp; VERSION HISTORY
         </span>
         <h1 className="mt-2 text-2xl font-bold">Resume Version &amp; Analysis History</h1>
         <p className="mt-2 max-w-[65ch] text-sm text-[var(--text-secondary)]">

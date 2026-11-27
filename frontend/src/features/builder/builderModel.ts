@@ -68,7 +68,6 @@ export interface BuilderDocumentState {
   resumeId: string | null;
   versionId: string | null;
   versionNumber: number;
-  isSample: boolean;
   sourceType: string;
   title: string;
   templateSlug: BuilderTemplateSlug;
@@ -241,7 +240,6 @@ export function createBlankDocument(templateSlug: BuilderTemplateSlug = 'swiss-t
     resumeId: null,
     versionId: null,
     versionNumber: 1,
-    isSample: false,
     sourceType: 'builder',
     title: 'Untitled Student Resume',
     templateSlug,
@@ -263,72 +261,16 @@ export function createStudentStarterDocument(
     resumeId: null,
     versionId: null,
     versionNumber: 1,
-    isSample: false,
     sourceType: 'builder',
-    title: 'Student Starter Draft (Replace With Your Details)',
+    title: 'Student Resume Draft',
     templateSlug,
-    contact: {
-      full_name: 'Your Full Name',
-      email: 'you@university.edu',
-      phone: '+91-90000-00000',
-      location: 'City, State',
-      github: 'github.com/your-handle',
-      linkedin: 'linkedin.com/in/your-handle',
-      portfolio: '',
-    },
+    contact: createEmptyContact(),
     sections: [
-      {
-        ...createSectionState('summary'),
-        summaryText:
-          'Final-year Computer Science student building accessible web applications and data-backed APIs. Replace this starter text with your real academic focus.',
-      },
-      {
-        ...createSectionState('education'),
-        educationEntries: [
-          {
-            id: nextBuilderId('edu'),
-            institution: 'Your University or College',
-            degree: 'B.Tech',
-            fieldOfStudy: 'Computer Science',
-            startDate: '2023',
-            endDate: '2027',
-            isCurrent: true,
-            gpa: '',
-            highlights: 'Relevant Coursework: Data Structures, Databases, Web Engineering',
-          },
-        ],
-      },
-      {
-        ...createSectionState('skills'),
-        skillItems: ['Python', 'TypeScript', 'React', 'SQL', 'Git'],
-      },
-      {
-        ...createSectionState('projects'),
-        projectEntries: [
-          {
-            id: nextBuilderId('prj'),
-            name: 'Academic Capstone Project',
-            technologies: 'Python, React, SQL',
-            url: '',
-            startDate: '2025',
-            endDate: '2026',
-            bullets:
-              '- Describe the problem you solved and the tools you used.\n- Quantify your actual tested outcome without inflating metrics.',
-          },
-        ],
-      },
-      {
-        ...createSectionState('certifications'),
-        certificationEntries: [
-          {
-            id: nextBuilderId('cert'),
-            name: 'Course or Credential Name',
-            issuer: 'Issuing Organization',
-            date: '2025',
-            credentialUrl: '',
-          },
-        ],
-      },
+      createSectionState('summary'),
+      createSectionState('education'),
+      createSectionState('skills'),
+      createSectionState('projects'),
+      createSectionState('certifications'),
     ],
     updatedAt: null,
   };
@@ -849,7 +791,6 @@ export function resumeDetailToBuilderDocument(detail: ResumeDetail): BuilderDocu
     resumeId: detail.id,
     versionId: detail.version.version_id,
     versionNumber: detail.version.version_number,
-    isSample: detail.is_sample,
     sourceType: detail.source_type,
     title: detail.title,
     templateSlug,
@@ -1101,9 +1042,6 @@ export function toFriendlyBuilderError(err: unknown, fallback: string): string {
   const msg = err.message || '';
   if (/RATE_LIMIT/i.test(msg) || /too many requests/i.test(msg)) {
     return 'You are saving too quickly. Please wait a few seconds and try again.';
-  }
-  if (/READ_ONLY_SAMPLE/i.test(msg) || /sample/i.test(msg)) {
-    return 'Built-in sample resumes are read-only. Create an editable draft copy first.';
   }
   if (/VALIDATION_ERROR|INVALID_/i.test(msg)) {
     return 'Please check your required fields (Resume title, Full name, and at least one section with content).';

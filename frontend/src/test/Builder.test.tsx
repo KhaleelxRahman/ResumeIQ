@@ -16,7 +16,6 @@ function makeParsedResume(overrides: Partial<ResumeDetail> = {}): ResumeDetail {
     id: '11111111-1111-1111-1111-111111111111',
     title: 'Parsed Student Resume',
     source_type: 'upload_pdf',
-    is_sample: false,
     active_version_id: '22222222-2222-2222-2222-222222222222',
     created_at: '2026-11-27T09:00:00Z',
     updated_at: '2026-11-27T09:00:00Z',
@@ -114,7 +113,7 @@ function stubBuilderFetch(handler: (url: string, init?: RequestInit) => Response
           { status: 200 },
         );
       }
-      if (url.includes('/resumes?')) {
+      if (url.endsWith('/resumes') && (!init?.method || init.method === 'GET')) {
         return new Response(JSON.stringify({ resumes: [] }), { status: 200 });
       }
       return new Response(JSON.stringify({}), { status: 200 });
@@ -129,7 +128,7 @@ describe('Phase 6 Student Resume Builder', () => {
     const versionBodies: Array<Record<string, unknown>> = [];
 
     stubBuilderFetch((url, init) => {
-      if (url.includes('/resumes?')) {
+      if (url.endsWith('/resumes') && (!init?.method || init.method === 'GET')) {
         return new Response(
           JSON.stringify({
             resumes: [
@@ -137,7 +136,6 @@ describe('Phase 6 Student Resume Builder', () => {
                 id: currentResume.id,
                 title: currentResume.title,
                 source_type: currentResume.source_type,
-                is_sample: false,
                 active_version_id: currentResume.active_version_id,
                 candidate_label: currentResume.version.candidate_label,
                 word_count: currentResume.version.word_count,

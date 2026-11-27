@@ -25,7 +25,7 @@ export function AnalyzePage() {
   const [roles, setRoles] = useState<JobRoleSummary[]>([]);
   const [resumes, setResumes] = useState<ResumeListItem[]>([]);
   const [activeResume, setActiveResume] = useState<ResumeDetail | null>(null);
-  const [statusMessage, setStatusMessage] = useState<string>('Connecting to Flask parsing engine...');
+  const [statusMessage, setStatusMessage] = useState<string>('Loading workspace...');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirmPurgeOpen, setConfirmPurgeOpen] = useState(false);
@@ -33,19 +33,19 @@ export function AnalyzePage() {
   const loadStudioState = async () => {
     setBusy(true);
     setErrorMessage(null);
-    setStatusMessage('Verifying backend health and issuing server workspace session...');
+    setStatusMessage('Loading your workspace session...');
     try {
       const [h, ws, r] = await Promise.all([
         fetchHealth(),
         ensureServerWorkspaceSession(),
         fetchJobRoles(),
       ]);
-      const list = await fetchWorkspaceResumes(true);
+      const list = await fetchWorkspaceResumes();
       setHealth(h);
       setWorkspace(ws);
       setRoles(r);
       setResumes(list);
-      setStatusMessage('Ready to upload PDF/DOCX resumes or inspect synthetic samples.');
+      setStatusMessage('Ready to upload a PDF or DOCX resume, or open a saved workspace draft.');
       if (list.length > 0 && !activeResume) {
         const first = await fetchResumeDetail(list[0].id);
         setActiveResume(first);
@@ -54,9 +54,9 @@ export function AnalyzePage() {
       setErrorMessage(
         err instanceof Error
           ? err.message
-          : 'Could not reach ResumeIQ backend API.',
+          : 'Could not reach the ResumeIQ service.',
       );
-      setStatusMessage('Backend offline.');
+      setStatusMessage('Service unavailable.');
     } finally {
       setBusy(false);
     }
@@ -79,18 +79,18 @@ export function AnalyzePage() {
 
   const handleUploaded = async (detail: ResumeDetail) => {
     setActiveResume(detail);
-    const updatedList = await fetchWorkspaceResumes(true);
+    const updatedList = await fetchWorkspaceResumes();
     setResumes(updatedList);
   };
 
   const handleUpdated = async (updated: ResumeDetail) => {
     setActiveResume(updated);
-    const updatedList = await fetchWorkspaceResumes(true);
+    const updatedList = await fetchWorkspaceResumes();
     setResumes(updatedList);
   };
 
   const handleDeleted = async (deletedId: string) => {
-    const updatedList = await fetchWorkspaceResumes(true);
+    const updatedList = await fetchWorkspaceResumes();
     setResumes(updatedList);
     if (activeResume?.id === deletedId) {
       if (updatedList.length > 0) {
@@ -109,7 +109,7 @@ export function AnalyzePage() {
       await purgeCurrentWorkspace();
       setActiveResume(null);
       const nextWs = await ensureServerWorkspaceSession();
-      const updatedList = await fetchWorkspaceResumes(true);
+      const updatedList = await fetchWorkspaceResumes();
       setWorkspace(nextWs);
       setResumes(updatedList);
       setStatusMessage('Workspace purged on server; fresh server-issued session active.');
@@ -128,13 +128,13 @@ export function AnalyzePage() {
     <div className="mx-auto max-w-[1320px] px-4 py-10 sm:px-6">
       <div className="mb-6 border-b border-[var(--border-hairline)] pb-5">
         <span className="font-mono-tabular text-xs text-[var(--accent-secondary)]">
-          PHASE 5 // RESUME UPLOAD &amp; PARSING STUDIO
+          UPLOAD &amp; PARSE STUDIO
         </span>
         <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
           Upload, Extract &amp; Verify Resume Structure
         </h1>
         <p className="mt-1 text-sm text-[var(--text-secondary)]">
-          Upload a PDF or DOCX resume to inspect extracted sections, layout warnings, and confidence scores. Deterministic Quality/ATS scoring and Role Matching arrive in Phases 7–8.
+          Upload a PDF or DOCX resume to inspect extracted sections, layout warnings, and masked contact flags before editing or analysis.
         </p>
       </div>
 
@@ -179,10 +179,10 @@ export function AnalyzePage() {
           <ResumeDropzone disabled={!workspace || !health} onUploaded={(d) => void handleUploaded(d)} />
 
           <section
-            aria-label="Workspace Resumes and Synthetic Samples"
+            aria-label="Workspace Resumes"
             className="rounded-xl border border-[var(--border-hairline)] bg-[var(--bg-surface)] p-5"
           >
-            <h2 className="mb-3 text-sm font-semibold">Workspace Resumes &amp; Synthetic Samples</h2>
+            <h2 className="mb-3 text-sm font-semibold">Workspace Resumes</h2>
             <ul className="space-y-2">
               {resumes.map((item) => {
                 const selected = activeResume?.id === item.id;
@@ -203,7 +203,7 @@ export function AnalyzePage() {
                           <span className="truncate">{item.title}</span>
                         </div>
                         <div className="mt-0.5 font-mono-tabular text-[11px] text-[var(--text-secondary)]">
-                          {item.is_sample ? 'SAMPLE' : item.source_type.toUpperCase()} • {item.word_count} words
+                          {item.source_type.toUpperCase()} • {item.word_count} words
                         </div>
                       </div>
                       <span className="shrink-0 font-mono-tabular text-xs text-[var(--accent-secondary)]">
@@ -220,7 +220,7 @@ export function AnalyzePage() {
           </section>
 
           <section className="rounded-xl border border-[var(--border-hairline)] bg-[var(--bg-surface)] p-5">
-            <h2 className="mb-2 text-sm font-semibold">Target Roles Ready for Phase 7–8</h2>
+            <h2 className="mb-2 text-sm font-semibold">Supported Target Roles</h2>
             <div className="flex flex-wrap gap-2">
               {roles.map((r) => (
                 <span
@@ -243,7 +243,7 @@ export function AnalyzePage() {
             />
           ) : (
             <div className="flex min-h-[340px] flex-col items-center justify-center rounded-xl border border-dashed border-[var(--border-hairline)] bg-[var(--bg-surface)] p-8 text-center">
-              <p className="text-sm font-medium">Upload a PDF/DOCX resume or select a synthetic sample</p>
+              <p className="text-sm font-medium">Upload a PDF or DOCX resume to begin</p>
               <p className="mt-1 max-w-[44ch] text-xs text-[var(--text-secondary)]">
                 Extracted sections, layout warnings, and masked contact flags will appear here for verification.
               </p>

@@ -19,6 +19,7 @@ Transparent engineering ledger documenting what is **not yet implemented**, **bl
 1. **Original Python Flask / SQLAlchemy / Alembic Backend Execution in AI Studio (`BLOCKED`):**
    - The AI Studio runtime migrated `/backend` to `/server` (Express + in-memory `Map` store + `pdfkit`) on port `3000`. Real SQLite/Neon PostgreSQL persistence, Alembic migrations, `PyMuPDF` self-parse checks, ReportLab PDF rendering, and `pytest` (`test_resume_builder.py`) cannot run inside this Node-only container and require running in the full-stack Python workspace.
    - Because `/server/store.ts` stores data in RAM only, saved Builder drafts survive browser reloads while the Node process stays alive, rather than across full server process restarts.
+   - Because `/backend` is absent from this workspace, removing `samples_seed.json`, `/api/samples`, and the `resumes.is_sample` column (via a reversible Alembic migration) in the canonical Flask repository remains pending reconciliation in the Python repo.
 2. **Live Neon PostgreSQL Connection & Remote Render/Vercel Deployment (`BLOCKED`):**
    - No live Neon PostgreSQL `DATABASE_URL` or cloud deployment exists before Phase 13.
    - PostgreSQL compatibility was previously verified via SQLAlchemy `CreateTable` / `CreateIndex` DDL compilation in `pytest`; real network connection, SSL handshake, and `alembic upgrade head` against Neon remain pending Phase 13.

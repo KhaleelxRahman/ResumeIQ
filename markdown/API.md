@@ -28,7 +28,6 @@ Every `4xx` / `5xx` Flask error handler returns:
 ```
 - `400` Bad Request / Pydantic validation failure
 - `401` Missing, invalid, or expired `X-Workspace-Token`
-- `403` Attempted mutation of read-only sample resources
 - `404` Resource not found or owned by a different workspace
 - `413` Upload exceeds `5 MB`
 - `415` Spoofed extension failing binary magic-byte check or invalid OOXML structure
@@ -40,24 +39,22 @@ Every `4xx` / `5xx` Flask error handler returns:
 
 ## 3. Endpoint Inventory
 
-### Health, Sessions & Demo Samples *(Implemented — Phase 4)*
+### Health & Workspace Sessions *(Implemented — Phase 4)*
 | Method & Path | Auth Scope | Purpose | Status |
 |---|---|---|---|
 | `GET /api/health` | Public | Readiness check: `{ status, db, nlp_ready, hf_mode, version, engine_version }`. | **IMPLEMENTED** |
 | `POST /api/workspaces/session` | Public *(rate-limited)* | Prunes expired sessions cleanly & generates server-issued workspace token (`201 Created`). | **IMPLEMENTED** |
 | `GET /api/workspaces/current` | Valid `X-Workspace-Token` | Validates current session metadata & expiration (`200 OK`). | **IMPLEMENTED** |
 | `DELETE /api/workspaces/current` | Valid `X-Workspace-Token` *(rate-limited)* | Permanently purges workspace + all cascaded data (`204 No Content`). | **IMPLEMENTED** |
-| `GET /api/samples` | Public | Lists synthetic read-only demo resumes (`is_sample=true`). | **IMPLEMENTED** |
-| `GET /api/samples/:sampleId` | Public | Returns read-only sample sections, detected canonical `skills`, `contact_flags`, and `masked_contact`. | **IMPLEMENTED** |
 
 ### Resume Upload, Parsing & Builder *(Phase 5–6)*
 | Method & Path | Purpose | Status |
 |---|---|---|
 | `POST /api/resumes/upload` | Rate/quota checked; validate `<= 5 MB` file (+ multipart overhead headroom), binary sniffing & bounded OOXML ZIP-bomb/XXE scan, parse via temp dir (`finally:` deleted), persist extracted metadata. | **IMPLEMENTED (Phase 5)** |
 | `PATCH /api/resumes/:id/versions/:versionId` | Update reviewed parsed sections while preserving immutable `raw_text`; forbids client `structured_payload` overrides (`extra="forbid"`) and recomputes `skills`, `word_count`, and contact flags on server. | **IMPLEMENTED (Phase 5)** |
-| `GET /api/resumes` | List workspace resumes (`?include_samples=true`). | **IMPLEMENTED (Phase 5)** |
+| `GET /api/resumes` | List resumes owned strictly by the active workspace. | **IMPLEMENTED (Phase 5)** |
 | `GET /api/resumes/:id` | Get resume details, extracted skills, masked contact, and sections (`404` across workspaces). | **IMPLEMENTED (Phase 5)** |
-| `DELETE /api/resumes/:id` | Cascade-delete owned resume + versions + analyses (`403` on samples). | **IMPLEMENTED (Phase 5)** |
+| `DELETE /api/resumes/:id` | Cascade-delete owned resume + versions + analyses. | **IMPLEMENTED (Phase 5)** |
 | `POST /api/resumes/builder` | Persist structured resume (`swiss-technical` or `academic-editorial`) as `v1`. | **FRONTEND INTEGRATED (Phase 6)** |
 | `POST /api/resumes/:id/versions` | Save revised resume snapshot (`vN`). | **FRONTEND INTEGRATED (Phase 6)** |
 | `GET /api/resumes/:id/versions/:versionId/export?format=pdf` | Stream PDF resume export. *(DOCX deferred.)* | **FRONTEND INTEGRATED (Phase 6)** |

@@ -77,7 +77,6 @@ describe('ResumeIQ Phase 4 Frontend Shell', () => {
       screen.getByRole('heading', { name: /ATS Compatibility Estimate/i }),
     ).toBeInTheDocument();
     expect(screen.getByText(/CALIBRATION PRISM \/\/ SVG FALLBACK/i)).toBeInTheDocument();
-    expect(await screen.findByText('API READY')).toBeInTheDocument();
     expect(await screen.findByText('6 mandatory / 8 preferred')).toBeInTheDocument();
     expect(screen.getByText('Data Analyst')).toBeInTheDocument();
   });

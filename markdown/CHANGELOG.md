@@ -4,12 +4,18 @@ All notable changes to **ResumeIQ** are documented here using [Keep a Changelog]
 
 ---
 
+## [0.6.1-scope-cleanup] — 2026-11-27
+
+### Removed & Cleaned (Strict Project Scope Cleanup)
+- **Synthetic Sample Resumes & Demo Endpoints Removed (`server/`, `frontend/`, `docs/api/openapi-draft.yaml`, `markdown/API.md`):** Deleted `server/data/samples_seed.json`, removed sample seeding from `server/store.ts`, removed `GET /api/samples` and `GET /api/samples/:sampleId` routes and `?include_samples` handling from `server/routes/api.ts`, and removed `SampleResumeSummary`, `fetchSamples()`, `is_sample` fields, and sample duplication/read-only banners across `BuilderPage.tsx`, `BuilderHeader.tsx`, `EditableParsePreview.tsx`, `AnalyzePage.tsx`, `builderModel.ts`, `apiClient.ts`, and `types/api.ts`.
+- **Non-Invention Starter Preset & Clean UI Copy (`builderModel.ts`, `LandingPage.tsx`, `AnalyzePage.tsx`, `ResultsPage.tsx`, `HistoryPage.tsx`, `App.tsx`):** Stripped pre-filled placeholder identity, skills, projects, and certifications from `createStudentStarterDocument()` so the Student Starter preset provides an empty 5-section structure (`Summary`, `Education`, `Skills`, `Projects`, `Certifications`); removed the `API READY` telemetry badge on `LandingPage.tsx`, internal phase/engine labels across pages, and the unused `/dashboard` redirect route.
+
 ## [0.6.0-phase6-frontend] — 2026-11-27
 
 ### Added & Verified (Phase 6 — Complete Resume Builder Frontend & Persistence Integration)
 - **Builder State Model & Pure Serializers (`frontend/src/features/builder/builderModel.ts`):** Implemented deterministic conversion between backend `ResumeDetail` payloads (`sections`, `structured_payload.builder_contact`, `header_contact`) and structured editable sections (`PersonalInfo`, `Summary`, `Education`, `Work Experience`, `Internships`, `Projects`, case-insensitive deduplicated `Technical Skills`, `Certifications`, `Achievements`, `Languages`, and custom sections), blank & student starter drafts, chronological date/URL/email validation, and non-invention guarantees.
 - **Modular Resume Builder Studio (`frontend/src/features/builder/` & `frontend/src/pages/BuilderPage.tsx`):** Added `BuilderHeader`, `SectionSidebar` (section navigation, accessible up/down reordering, add/remove optional/custom sections), `PersonalInfoForm`, `StructuredSectionEditor` (repeatable entries for Education/Experience/Internships/Projects/Certifications and deduplicated Skills manager), and print-ready `ResumePaperPreview` (`swiss-technical` & `academic-editorial` templates + `@media print` CSS rules).
-- **Persistence, Versioning, PDF Export & Studio Handoff (`apiClient.ts`, `EditableParsePreview.tsx`):** Wired `POST /api/resumes/builder`, `PATCH /api/resumes/:id/versions/:vid`, `POST /api/resumes/:id/versions`, `GET /api/resumes/:id/versions/:vid/export?format=pdf` blob downloads, URL `?resumeId=&versionId=` reload recovery, `ConfirmDialog` guards for unsaved changes & delete actions, read-only sample duplication, and `"Open in Builder"` handoff from `/analyze`.
+- **Persistence, Versioning, PDF Export & Studio Handoff (`apiClient.ts`, `EditableParsePreview.tsx`):** Wired `POST /api/resumes/builder`, `PATCH /api/resumes/:id/versions/:vid`, `POST /api/resumes/:id/versions`, `GET /api/resumes/:id/versions/:vid/export?format=pdf` blob downloads, URL `?resumeId=&versionId=` reload recovery, `ConfirmDialog` guards for unsaved changes & delete actions, and `"Open in Builder"` handoff from `/analyze`.
 - **Environment Compatibility Note:** In the AI Studio container where `/backend` (Flask/SQLAlchemy/Alembic) was migrated to `/server` (Express + in-memory store), `apiClient.ts` resolves same-origin `/api` cleanly on port `3000` while preserving `localhost:5000` for standalone Vite+Flask dev. Python/Flask/SQLAlchemy/ReportLab backend execution awaits a Python runtime environment.
 
 ## [0.5.0-phase5-hardening] — 2026-11-27

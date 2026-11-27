@@ -15,7 +15,6 @@ export function AppRoutes() {
         <Route path="/builder" element={<BuilderPage />} />
         <Route path="/analyze" element={<AnalyzePage />} />
         <Route path="/results/:analysisId" element={<ResultsPage />} />
-        <Route path="/dashboard" element={<Navigate to="/analyze" replace />} />
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

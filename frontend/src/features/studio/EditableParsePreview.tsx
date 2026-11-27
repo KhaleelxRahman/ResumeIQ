@@ -119,11 +119,6 @@ export function EditableParsePreview({ resume, onUpdated, onDeleted }: Props) {
         <div>
           <div className="flex flex-wrap items-center gap-2 font-mono-tabular text-[11px] text-[var(--accent-secondary)]">
             <span>PARSE PREVIEW // {resume.source_type.toUpperCase()}</span>
-            {resume.is_sample && (
-              <span className="rounded bg-[var(--bg-elevated)] px-2 py-0.5 text-[var(--status-warning)]">
-                READ-ONLY SAMPLE
-              </span>
-            )}
             {resume.version.structured_payload.user_edited && (
               <span className="rounded bg-[var(--status-success)]/15 px-2 py-0.5 text-[#86efac]">
                 VERIFIED BY USER
@@ -161,17 +156,15 @@ export function EditableParsePreview({ resume, onUpdated, onDeleted }: Props) {
             <span>Open in Builder</span>
           </Link>
 
-          {!resume.is_sample && (
-            <button
-              type="button"
-              disabled={deleting}
-              onClick={() => setConfirmDeleteOpen(true)}
-              className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-[var(--status-danger)]/40 bg-[var(--bg-elevated)] px-3 text-xs font-medium text-[#fda4af] hover:bg-[var(--status-danger)]/10 disabled:opacity-50"
-            >
-              <Trash2 size={14} aria-hidden="true" />
-              <span>{deleting ? 'Deleting...' : 'Delete Resume'}</span>
-            </button>
-          )}
+          <button
+            type="button"
+            disabled={deleting}
+            onClick={() => setConfirmDeleteOpen(true)}
+            className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-[var(--status-danger)]/40 bg-[var(--bg-elevated)] px-3 text-xs font-medium text-[#fda4af] hover:bg-[var(--status-danger)]/10 disabled:opacity-50"
+          >
+            <Trash2 size={14} aria-hidden="true" />
+            <span>{deleting ? 'Deleting...' : 'Delete Resume'}</span>
+          </button>
         </div>
       </div>
 
@@ -256,7 +249,6 @@ export function EditableParsePreview({ resume, onUpdated, onDeleted }: Props) {
           <input
             id="parsed-title"
             type="text"
-            disabled={resume.is_sample}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="w-full rounded-lg border border-[var(--border-strong)] bg-[var(--bg-canvas)] px-3 py-2 text-sm text-[var(--text-primary)] disabled:opacity-60"
@@ -269,7 +261,6 @@ export function EditableParsePreview({ resume, onUpdated, onDeleted }: Props) {
           <input
             id="parsed-candidate"
             type="text"
-            disabled={resume.is_sample}
             value={candidateLabel}
             placeholder="Not detected"
             onChange={(e) => setCandidateLabel(e.target.value)}
@@ -281,21 +272,19 @@ export function EditableParsePreview({ resume, onUpdated, onDeleted }: Props) {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold">Segmented Sections ({sections.length})</h3>
-          {!resume.is_sample && (
-            <button
-              type="button"
-              onClick={() =>
-                setSections((prev) => [
-                  ...prev,
-                  { section_type: 'other', raw_heading: 'ADDITIONAL SECTION', content_text: '' },
-                ])
-              }
-              className="inline-flex min-h-[36px] items-center gap-1 rounded-lg border border-[var(--border-strong)] bg-[var(--bg-elevated)] px-2.5 text-xs font-medium hover:border-[var(--accent-primary)]"
-            >
-              <Plus size={14} aria-hidden="true" />
-              <span>Add Section</span>
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() =>
+              setSections((prev) => [
+                ...prev,
+                { section_type: 'other', raw_heading: 'ADDITIONAL SECTION', content_text: '' },
+              ])
+            }
+            className="inline-flex min-h-[36px] items-center gap-1 rounded-lg border border-[var(--border-strong)] bg-[var(--bg-elevated)] px-2.5 text-xs font-medium hover:border-[var(--accent-primary)]"
+          >
+            <Plus size={14} aria-hidden="true" />
+            <span>Add Section</span>
+          </button>
         </div>
 
         {sections.map((sec, idx) => (
@@ -306,7 +295,6 @@ export function EditableParsePreview({ resume, onUpdated, onDeleted }: Props) {
             <div className="flex flex-wrap items-center gap-2">
               <select
                 aria-label={`Section ${idx + 1} category`}
-                disabled={resume.is_sample}
                 value={sec.section_type}
                 onChange={(e) => {
                   const next = [...sections];
@@ -325,7 +313,6 @@ export function EditableParsePreview({ resume, onUpdated, onDeleted }: Props) {
               <input
                 aria-label={`Section ${idx + 1} heading`}
                 type="text"
-                disabled={resume.is_sample}
                 value={sec.raw_heading}
                 onChange={(e) => {
                   const next = [...sections];
@@ -335,7 +322,7 @@ export function EditableParsePreview({ resume, onUpdated, onDeleted }: Props) {
                 className="min-w-[160px] flex-1 rounded border border-[var(--border-strong)] bg-[var(--bg-surface)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] disabled:opacity-60"
               />
 
-              {!resume.is_sample && sections.length > 1 && (
+              {sections.length > 1 && (
                 <button
                   type="button"
                   aria-label={`Remove section ${sec.raw_heading}`}
@@ -350,7 +337,6 @@ export function EditableParsePreview({ resume, onUpdated, onDeleted }: Props) {
             <textarea
               aria-label={`Section ${idx + 1} content`}
               rows={3}
-              disabled={resume.is_sample}
               value={sec.content_text}
               onChange={(e) => {
                 const next = [...sections];
@@ -387,17 +373,15 @@ export function EditableParsePreview({ resume, onUpdated, onDeleted }: Props) {
           <span>{showRawText ? 'Hide Original Extracted Text' : 'Inspect Original Extracted Text'}</span>
         </button>
 
-        {!resume.is_sample && (
-          <button
-            type="button"
-            disabled={saving}
-            onClick={() => void handleSave()}
-            className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-[var(--accent-primary)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-primary-hover)] disabled:opacity-60"
-          >
-            <Save size={16} aria-hidden="true" />
-            <span>{saving ? 'Saving...' : 'Save Verified Sections'}</span>
-          </button>
-        )}
+        <button
+          type="button"
+          disabled={saving}
+          onClick={() => void handleSave()}
+          className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-[var(--accent-primary)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-primary-hover)] disabled:opacity-60"
+        >
+          <Save size={16} aria-hidden="true" />
+          <span>{saving ? 'Saving...' : 'Save Verified Sections'}</span>
+        </button>
       </div>
 
       {showRawText && (

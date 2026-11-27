@@ -139,77 +139,6 @@ export function initializeStore(): void {
       skills: r.skills,
     });
   }
-
-  // Seed synthetic sample resumes
-  const samplesRaw = JSON.parse(
-    fs.readFileSync(path.join(DATA_DIR, 'samples_seed.json'), 'utf-8'),
-  ) as {
-    samples: Array<{
-      title: string;
-      candidate_label: string;
-      template_slug: TemplateSlug;
-      contact_flags: Record<string, boolean>;
-      raw_text: string;
-      sections: Array<{ section_type: string; raw_heading: string; content_text: string }>;
-    }>;
-  };
-
-  const nowIso = new Date().toISOString();
-  for (const s of samplesRaw.samples) {
-    const resumeId = deterministicUuid(`sample:${s.title}`);
-    const versionId = deterministicUuid(`sample-version:${s.title}:1`);
-    const segmented: SegmentedSection[] = s.sections.map((sec, idx) => ({
-      section_type: sec.section_type,
-      raw_heading: sec.raw_heading,
-      content_text: sec.content_text,
-      confidence: 0.98,
-      order_index: idx,
-    }));
-
-    const entities = extractStructuredResumeEntities(s.raw_text, segmented, [], 0);
-    const sections: ResumeSectionRecord[] = segmented.map((sec) => ({
-      id: deterministicUuid(`sample-sec:${s.title}:${sec.order_index}`),
-      section_type: sec.section_type,
-      raw_heading: sec.raw_heading,
-      content_text: sec.content_text,
-      confidence: sec.confidence,
-      order_index: sec.order_index,
-    }));
-
-    const version: ResumeVersionRecord = {
-      version_id: versionId,
-      version_number: 1,
-      file_name: null,
-      file_size_bytes: null,
-      template_slug: s.template_slug || 'swiss-technical',
-      candidate_label: s.candidate_label || entities.candidate_label,
-      contact_flags: { ...entities.contact_flags, ...(s.contact_flags ?? {}) },
-      masked_contact: entities.masked_contact,
-      structured_payload: {
-        ...entities.structured_payload,
-        candidate_label: s.candidate_label || entities.candidate_label,
-        user_edited: false,
-      },
-      raw_text: s.raw_text,
-      word_count: s.raw_text.trim().split(/\s+/).length,
-      extraction_confidence: entities.extraction_confidence,
-      parse_warnings: entities.warnings,
-      sections,
-      created_at: nowIso,
-    };
-
-    resumesById.set(resumeId, {
-      id: resumeId,
-      workspace_id: null,
-      title: s.title,
-      source_type: 'sample',
-      is_sample: true,
-      active_version_id: versionId,
-      created_at: nowIso,
-      updated_at: nowIso,
-      versions: [version],
-    });
-  }
 }
 
 export function issueWorkspaceSession(ttlDays: number): { workspace: WorkspaceRecord; rawToken: string } {
@@ -293,16 +222,7 @@ export function assertWorkspaceOwnership(
   resourceWorkspaceId: string | null,
   activeWorkspace: WorkspaceRecord,
   resourceLabel = 'Resource',
-  options: { allowSharedSample?: boolean; isSample?: boolean } = {},
 ): void {
-  if (options.isSample) {
-    if (options.allowSharedSample) return;
-    throw new ApiError(
-      403,
-      'SAMPLE_READ_ONLY',
-      `${resourceLabel} is a read-only synthetic sample and cannot be modified.`,
-    );
-  }
   if (!resourceWorkspaceId || resourceWorkspaceId !== activeWorkspace.id) {
     throw new ApiError(
       404,
@@ -320,20 +240,9 @@ export function getJobRoleBySlug(slug: string): JobRoleRecord | undefined {
   return jobRolesBySlug.get(slug);
 }
 
-export function listAllSamples(): ResumeRecord[] {
+export function listWorkspaceResumes(workspace: WorkspaceRecord): ResumeRecord[] {
   return Array.from(resumesById.values())
-    .filter((r) => r.is_sample)
-    .sort((a, b) => a.title.localeCompare(b.title));
-}
-
-export function getSampleById(sampleId: string): ResumeRecord | undefined {
-  const res = resumesById.get(sampleId);
-  return res && res.is_sample ? res : undefined;
-}
-
-export function listWorkspaceResumes(workspace: WorkspaceRecord, includeSamples = true): ResumeRecord[] {
-  return Array.from(resumesById.values())
-    .filter((r) => r.workspace_id === workspace.id || (includeSamples && r.is_sample))
+    .filter((r) => r.workspace_id === workspace.id)
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
 }
 
@@ -459,7 +368,6 @@ export function saveUploadedResume(params: {
     workspace_id: params.workspace.id,
     title: params.title,
     source_type: `upload_${params.extension}`,
-    is_sample: false,
     active_version_id: null,
     created_at: nowIso,
     updated_at: nowIso,
@@ -497,7 +405,6 @@ export function saveBuilderResume(params: {
     workspace_id: params.workspace.id,
     title: params.title,
     source_type: 'builder',
-    is_sample: false,
     active_version_id: null,
     created_at: nowIso,
     updated_at: nowIso,

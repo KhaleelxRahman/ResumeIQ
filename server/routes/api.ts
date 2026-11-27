@@ -22,11 +22,9 @@ import {
   enforceWorkspaceResumeQuota,
   getJobRoleBySlug,
   getResumeById,
-  getSampleById,
   hashWorkspaceToken,
   issueWorkspaceSession,
   listAllJobRoles,
-  listAllSamples,
   listWorkspaceResumes,
   nlpTaxonomyLoaded,
   purgeExpiredWorkspaces,
@@ -111,7 +109,6 @@ function toResumeDetailDto(resume: ResumeRecord, version: ResumeVersionRecord) {
     id: resume.id,
     title: resume.title,
     source_type: resume.source_type,
-    is_sample: resume.is_sample,
     active_version_id: resume.active_version_id,
     created_at: resume.created_at,
     updated_at: resume.updated_at,
@@ -268,55 +265,6 @@ export function createApiRouter(): Router {
     });
   });
 
-  // Samples
-  router.get('/samples', (_req, res) => {
-    const items = listAllSamples()
-      .map((resume) => {
-        const version = resume.versions[0];
-        if (!version) return null;
-        return {
-          id: resume.id,
-          title: resume.title,
-          candidate_label: version.candidate_label,
-          template_slug: version.template_slug,
-          word_count: version.word_count,
-          active_version_id: version.version_id,
-          sections_count: version.sections.length,
-        };
-      })
-      .filter(Boolean);
-    res.status(200).json({ samples: items });
-  });
-
-  router.get('/samples/:sampleId', (req, res) => {
-    const sampleId = parseUuid(String(req.params.sampleId), 'Sample identifier');
-    const resume = getSampleById(sampleId);
-    if (!resume || resume.versions.length === 0) {
-      throw new ApiError(404, 'SAMPLE_NOT_FOUND', 'Synthetic sample resume not found.');
-    }
-    const version = resume.versions[0];
-    const sections = [...version.sections]
-      .sort((a, b) => a.order_index - b.order_index)
-      .map((s) => ({
-        section_type: s.section_type,
-        raw_heading: s.raw_heading,
-        content_text: s.content_text,
-        order_index: s.order_index,
-      }));
-    res.status(200).json({
-      id: resume.id,
-      title: resume.title,
-      is_sample: true,
-      candidate_label: version.candidate_label,
-      template_slug: version.template_slug,
-      word_count: version.word_count,
-      contact_flags: version.contact_flags,
-      masked_contact: version.masked_contact,
-      skills: Array.isArray(version.structured_payload.skills) ? version.structured_payload.skills : [],
-      sections,
-    });
-  });
-
   // Resumes
   router.post(
     '/resumes/upload',
@@ -372,9 +320,7 @@ export function createApiRouter(): Router {
   );
 
   router.get('/resumes', requireWorkspace, (req: WorkspaceRequest, res) => {
-    const rawInclude = String(req.query.include_samples ?? 'true').toLowerCase();
-    const includeSamples = !['0', 'false', 'no'].includes(rawInclude);
-    const items = listWorkspaceResumes(req.workspace!, includeSamples)
+    const items = listWorkspaceResumes(req.workspace!)
       .map((r) => {
         const activeVer =
           r.versions.find((v) => v.version_id === r.active_version_id) ?? r.versions[0];
@@ -383,7 +329,6 @@ export function createApiRouter(): Router {
           id: r.id,
           title: r.title,
           source_type: r.source_type,
-          is_sample: r.is_sample,
           active_version_id: r.active_version_id,
           candidate_label: activeVer.candidate_label,
           word_count: activeVer.word_count,
@@ -402,10 +347,7 @@ export function createApiRouter(): Router {
     const versionId = rawVerId ? parseUuid(rawVerId, 'Version ID') : null;
 
     const resume = getResumeById(resumeId);
-    assertWorkspaceOwnership(resume.workspace_id, req.workspace!, 'Resume', {
-      allowSharedSample: true,
-      isSample: resume.is_sample,
-    });
+    assertWorkspaceOwnership(resume.workspace_id, req.workspace!, 'Resume');
 
     if (versionId) {
       const selected = resume.versions.find((v) => v.version_id === versionId);
@@ -468,10 +410,7 @@ export function createApiRouter(): Router {
     enforceRateLimit(req, 'resume_builder', appConfig.RATE_LIMIT_UPLOAD_PER_MIN, 60);
     const resumeId = parseUuid(String(req.params.resumeId), 'Resume ID');
     const resume = getResumeById(resumeId);
-    assertWorkspaceOwnership(resume.workspace_id, req.workspace!, 'Resume', {
-      allowSharedSample: false,
-      isSample: resume.is_sample,
-    });
+    assertWorkspaceOwnership(resume.workspace_id, req.workspace!, 'Resume');
 
     if (resume.versions.length >= 50) {
       throw new ApiError(
@@ -546,10 +485,7 @@ export function createApiRouter(): Router {
         }
 
         const resume = getResumeById(resumeId);
-        assertWorkspaceOwnership(resume.workspace_id, req.workspace!, 'Resume', {
-          allowSharedSample: true,
-          isSample: resume.is_sample,
-        });
+        assertWorkspaceOwnership(resume.workspace_id, req.workspace!, 'Resume');
 
         const version = resume.versions.find((v) => v.version_id === versionId);
         if (!version) {
@@ -633,10 +569,7 @@ export function createApiRouter(): Router {
     }
 
     const resume = getResumeById(resumeId);
-    assertWorkspaceOwnership(resume.workspace_id, req.workspace!, 'Resume', {
-      allowSharedSample: false,
-      isSample: resume.is_sample,
-    });
+    assertWorkspaceOwnership(resume.workspace_id, req.workspace!, 'Resume');
 
     const version = resume.versions.find((v) => v.version_id === versionId);
     if (!version) {
@@ -750,12 +683,13 @@ export function createApiRouter(): Router {
   router.delete('/resumes/:resumeId', requireWorkspace, (req: WorkspaceRequest, res) => {
     const resumeId = parseUuid(String(req.params.resumeId), 'Resume ID');
     const resume = getResumeById(resumeId);
-    assertWorkspaceOwnership(resume.workspace_id, req.workspace!, 'Resume', {
-      allowSharedSample: false,
-      isSample: resume.is_sample,
-    });
+    assertWorkspaceOwnership(resume.workspace_id, req.workspace!, 'Resume');
     deleteResumeRecord(resumeId);
     res.status(204).send();
+  });
+
+  router.use((_req: Request, _res: Response, next: NextFunction) => {
+    next(new ApiError(404, 'NOT_FOUND', 'API endpoint not found.'));
   });
 
   // API error handler

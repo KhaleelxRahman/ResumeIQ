@@ -52,11 +52,30 @@ describe('builderModel pure logic', () => {
     assert.equal(isDateRangeChronological('Jan 2024', 'May 2024', false), true);
   });
 
-  it('round-trips a structured builder document cleanly without data loss across template switches', () => {
+  it('creates an empty Student Starter structure without fabricating skills, projects, or contact details', () => {
     const starter = createStudentStarterDocument('academic-editorial');
+    assert.equal(starter.contact.full_name, '');
+    assert.equal(starter.contact.email, '');
+    assert.deepEqual(
+      starter.sections.map((s) => s.type),
+      ['summary', 'education', 'skills', 'projects', 'certifications'],
+    );
+    assert.deepEqual(starter.sections[2].skillItems, []);
+    assert.equal(starter.sections[3].projectEntries[0].name, '');
+
     starter.contact.full_name = 'Ananya Verma';
     starter.contact.email = 'ananya@example.edu';
     starter.contact.github = 'github.com/ananya-v';
+    starter.sections[0].summaryText = 'Computer science student building web and data tools.';
+    starter.sections[1].educationEntries[0].institution = 'Example Institute of Technology';
+    starter.sections[1].educationEntries[0].degree = 'B.Tech';
+    starter.sections[1].educationEntries[0].fieldOfStudy = 'Computer Science';
+    starter.sections[2].skillItems = ['Python', 'TypeScript', 'React', 'SQL', 'Git'];
+    starter.sections[3].projectEntries[0].name = 'Coursework Telemetry Tool';
+    starter.sections[3].projectEntries[0].technologies = 'Python, React, SQL';
+    starter.sections[3].projectEntries[0].bullets = '- Built student dashboard prototype.';
+    starter.sections[4].certificationEntries[0].name = 'Database Foundations';
+    starter.sections[4].certificationEntries[0].issuer = 'University Lab';
 
     const validation = validateBuilderDocument(starter);
     assert.equal(validation.valid, true);
@@ -71,7 +90,6 @@ describe('builderModel pure logic', () => {
       id: '11111111-1111-1111-1111-111111111111',
       title: payload.title,
       source_type: 'builder',
-      is_sample: false,
       active_version_id: '22222222-2222-2222-2222-222222222222',
       created_at: '2026-11-27T10:00:00Z',
       updated_at: '2026-11-27T10:00:00Z',
@@ -107,10 +125,10 @@ describe('builderModel pure logic', () => {
     assert.equal(hydrated.contact.full_name, 'Ananya Verma');
     assert.equal(hydrated.contact.email, 'ananya@example.edu');
     assert.equal(hydrated.templateSlug, 'academic-editorial');
-    assert.equal(hydrated.sections[1].educationEntries[0].institution, 'Your University or College');
+    assert.equal(hydrated.sections[1].educationEntries[0].institution, 'Example Institute of Technology');
     assert.deepEqual(hydrated.sections[2].skillItems, ['Python', 'TypeScript', 'React', 'SQL', 'Git']);
-    assert.equal(hydrated.sections[3].projectEntries[0].name, 'Academic Capstone Project');
-    assert.equal(hydrated.sections[4].certificationEntries[0].issuer, 'Issuing Organization');
+    assert.equal(hydrated.sections[3].projectEntries[0].name, 'Coursework Telemetry Tool');
+    assert.equal(hydrated.sections[4].certificationEntries[0].issuer, 'University Lab');
 
     // Switch template -> content stays intact
     hydrated.templateSlug = 'swiss-technical';
@@ -119,12 +137,11 @@ describe('builderModel pure logic', () => {
     assert.equal(patchPayload.sections?.length, payload.sections.length);
   });
 
-  it('parses uploaded PDF/sample resume sections cleanly and supports reordering', () => {
+  it('parses uploaded PDF resume sections cleanly and supports reordering', () => {
     const uploaded: ResumeDetail = {
       id: '33333333-3333-3333-3333-333333333333',
       title: 'Uploaded Student Resume',
       source_type: 'upload_pdf',
-      is_sample: false,
       active_version_id: '44444444-4444-4444-4444-444444444444',
       created_at: '2026-11-27T10:00:00Z',
       updated_at: '2026-11-27T10:00:00Z',

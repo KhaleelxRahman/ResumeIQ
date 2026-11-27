@@ -7,11 +7,11 @@ export function ResultsPage() {
     <div className="mx-auto max-w-[1120px] px-4 py-12 sm:px-6">
       <div className="rounded-xl border border-[var(--border-hairline)] bg-[var(--bg-surface)] p-8">
         <span className="font-mono-tabular text-xs text-[var(--accent-secondary)]">
-          RESULTS WORKSPACE // PHASES 7–10 TARGET
+          RESULTS WORKSPACE
         </span>
         <h1 className="mt-2 text-2xl font-bold">Analysis Workspace ({analysisId ?? 'Pending'})</h1>
         <p className="mt-2 max-w-[65ch] text-sm text-[var(--text-secondary)]">
-          This route will display the separated Resume Quality Score (0–100), ATS Compatibility Estimate (0–100), Role Skill Match (%), line-level evidence drawer, deterministic recommendations, and downloadable ReportLab PDF audit once Phases 7–10 are implemented.
+          Displays the separated Resume Quality Score (0–100), ATS Compatibility Estimate (0–100), Role Skill Match (%), evidence snippets, recommendations, and downloadable PDF audit report.
         </p>
         <div className="mt-6">
           <Link

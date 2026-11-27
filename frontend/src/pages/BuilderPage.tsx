@@ -67,7 +67,6 @@ export function BuilderPage() {
   const [pendingNav, setPendingNav] = useState<PendingNavigation | null>(null);
 
   const isDirty = useMemo(() => {
-    if (doc.isSample) return false;
     return documentSignature(doc) !== savedSignature;
   }, [doc, savedSignature]);
 
@@ -114,7 +113,7 @@ export function BuilderPage() {
 
   const refreshResumeList = useCallback(async () => {
     try {
-      const list = await fetchWorkspaceResumes(true);
+      const list = await fetchWorkspaceResumes();
       setAvailableResumes(list);
     } catch {
       // Non-blocking list refresh; handled on explicit actions if offline.
@@ -127,7 +126,7 @@ export function BuilderPage() {
       setBusyAction('load');
       try {
         await ensureServerWorkspaceSession();
-        const list = await fetchWorkspaceResumes(true);
+        const list = await fetchWorkspaceResumes();
         if (!active) return;
         setAvailableResumes(list);
 
@@ -195,7 +194,7 @@ export function BuilderPage() {
         setSearchParams({}, { replace: true });
         setBanner({
           kind: 'info',
-          text: 'Loaded the student starter structure. Replace the sample prompts with your actual information before saving.',
+          text: 'Loaded the 5-section student resume structure. Enter your own academic details, skills, and projects before saving.',
         });
         return;
       }
@@ -245,7 +244,7 @@ export function BuilderPage() {
 
     try {
       const detail =
-        doc.resumeId && doc.versionId && !doc.isSample
+        doc.resumeId && doc.versionId
           ? await updateParsedVersion(doc.resumeId, doc.versionId, buildPatchDraftPayload(doc))
           : await createBuilderResume(buildCreateResumePayload(doc));
 
@@ -267,7 +266,7 @@ export function BuilderPage() {
   };
 
   const handleSaveNewVersion = async () => {
-    if (!doc.resumeId || doc.isSample) {
+    if (!doc.resumeId) {
       await persistDraft();
       return;
     }
@@ -307,53 +306,12 @@ export function BuilderPage() {
     }
   };
 
-  const handleDuplicateSample = async () => {
-    const editableCopy: BuilderDocumentState = {
-      ...doc,
-      resumeId: null,
-      versionId: null,
-      versionNumber: 1,
-      isSample: false,
-      sourceType: 'builder',
-      title: doc.title.includes('(Copy)') ? doc.title : `${doc.title} (Editable Copy)`,
-    };
-
-    const check = validateBuilderDocument(editableCopy);
-    if (!check.valid) {
-      setDoc(editableCopy);
-      setSavedSignature('__unsaved_copy__');
-      setVersions([]);
-      setSearchParams({}, { replace: true });
-      setBanner({ kind: 'info', text: 'Created editable copy. Review fields and click Save Draft.' });
-      return;
-    }
-
-    setBusyAction('save');
-    setBanner(null);
-    try {
-      const created = await createBuilderResume(buildCreateResumePayload(editableCopy));
-      syncFromDetail(created, true);
-      await refreshResumeList();
-      setBanner({
-        kind: 'ok',
-        text: 'Editable draft copy created in your workspace.',
-      });
-    } catch (err) {
-      setBanner({
-        kind: 'err',
-        text: toFriendlyBuilderError(err, 'Could not duplicate this sample right now.'),
-      });
-    } finally {
-      setBusyAction(null);
-    }
-  };
-
   const handleExportPdf = async () => {
     setBanner(null);
     let targetResumeId = doc.resumeId;
     let targetVersionId = doc.versionId;
 
-    if (!doc.isSample && (!targetResumeId || !targetVersionId || isDirty)) {
+    if (!targetResumeId || !targetVersionId || isDirty) {
       const saved = await persistDraft();
       if (!saved) return;
       targetResumeId = saved.id;
@@ -385,7 +343,7 @@ export function BuilderPage() {
   };
 
   const handleDeleteResume = async () => {
-    if (!doc.resumeId || doc.isSample) return;
+    if (!doc.resumeId) return;
     setBusyAction('delete');
     setBanner(null);
     try {
@@ -455,7 +413,6 @@ export function BuilderPage() {
         versionId={doc.versionId}
         versionNumber={doc.versionNumber}
         versions={versions}
-        isSample={doc.isSample}
         templateSlug={doc.templateSlug}
         saveStatus={saveStatus}
         lastSavedAt={lastSavedAt}
@@ -478,34 +435,11 @@ export function BuilderPage() {
         }}
         onCreateBlank={() => requestNavigation({ kind: 'blank' })}
         onLoadStarter={() => requestNavigation({ kind: 'starter' })}
-        onDuplicateSample={() => void handleDuplicateSample()}
         onSaveDraft={() => void persistDraft()}
         onSaveNewVersion={() => void handleSaveNewVersion()}
         onExportPdf={() => void handleExportPdf()}
         onRequestDelete={() => setConfirmDeleteOpen(true)}
       />
-
-      {doc.isSample && (
-        <div
-          role="status"
-          className="no-print mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--status-warning)]/40 bg-[var(--status-warning)]/10 px-4 py-3 text-xs text-[#fcd34d]"
-        >
-          <div className="flex items-center gap-2">
-            <Info size={15} className="shrink-0" aria-hidden="true" />
-            <span>
-              Viewing a read-only synthetic sample resume. Create an editable copy to customize fields and save versions.
-            </span>
-          </div>
-          <button
-            type="button"
-            disabled={busyAction !== null}
-            onClick={() => void handleDuplicateSample()}
-            className="min-h-[36px] rounded-lg bg-[var(--accent-primary)] px-3 text-xs font-semibold text-white hover:bg-[var(--accent-primary-hover)] disabled:opacity-50"
-          >
-            Create Editable Copy
-          </button>
-        </div>
-      )}
 
       {banner && (
         <div
@@ -541,7 +475,7 @@ export function BuilderPage() {
             <SectionSidebar
               activeTarget={activeTarget}
               sections={doc.sections}
-              readOnly={doc.isSample}
+              readOnly={false}
               onSelectTarget={setActiveTarget}
               onMoveSection={handleMoveSection}
               onRemoveSection={handleRemoveSection}
@@ -554,14 +488,14 @@ export function BuilderPage() {
               <PersonalInfoForm
                 contact={doc.contact}
                 errors={errors}
-                readOnly={doc.isSample}
+                readOnly={false}
                 onChange={(nextContact) => setDoc((prev) => ({ ...prev, contact: nextContact }))}
               />
             ) : (
               <StructuredSectionEditor
                 section={activeSection}
                 errors={errors}
-                readOnly={doc.isSample}
+                readOnly={false}
                 onChange={updateSection}
               />
             )}

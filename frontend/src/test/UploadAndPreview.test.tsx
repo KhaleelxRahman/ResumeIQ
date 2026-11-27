@@ -52,7 +52,7 @@ function stubBaseSessionAndStudioFetch(extraHandler?: (url: string, init?: Reque
       if (url.endsWith('/job-roles')) {
         return Promise.resolve(new Response(JSON.stringify({ roles: [] }), { status: 200 }));
       }
-      if (url.includes('/resumes?')) {
+      if (url.endsWith('/resumes') && (!init?.method || init.method === 'GET')) {
         return Promise.resolve(new Response(JSON.stringify({ resumes: [] }), { status: 200 }));
       }
       return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
@@ -121,7 +121,6 @@ describe('Phase 5 Resume Upload & Editable Parse Preview', () => {
       id: '11111111-1111-1111-1111-111111111111',
       title: 'rohan_resume',
       source_type: 'upload_pdf',
-      is_sample: false,
       active_version_id: '22222222-2222-2222-2222-222222222222',
       created_at: '2026-11-26T00:00:00Z',
       updated_at: '2026-11-26T00:00:00Z',
@@ -228,7 +227,6 @@ describe('Phase 5 Resume Upload & Editable Parse Preview', () => {
       id: '44444444-4444-4444-4444-444444444444',
       title: 'Owned Resume Draft',
       source_type: 'upload_pdf',
-      is_sample: false,
       active_version_id: '55555555-5555-5555-5555-555555555555',
       created_at: '2026-11-26T00:00:00Z',
       updated_at: '2026-11-26T00:00:00Z',
@@ -276,7 +274,7 @@ describe('Phase 5 Resume Upload & Editable Parse Preview', () => {
     const fetchMock = vi.fn();
     stubBaseSessionAndStudioFetch((url, init) => {
       fetchMock(url, init?.method ?? 'GET');
-      if (url.includes('/resumes?') && deleteCalls.length === 0) {
+      if (url.endsWith('/resumes') && (!init?.method || init.method === 'GET') && deleteCalls.length === 0) {
         return new Response(
           JSON.stringify({
             resumes: [
@@ -284,7 +282,6 @@ describe('Phase 5 Resume Upload & Editable Parse Preview', () => {
                 id: ownedResume.id,
                 title: ownedResume.title,
                 source_type: ownedResume.source_type,
-                is_sample: false,
                 active_version_id: ownedResume.active_version_id,
                 candidate_label: 'Aarav Test',
                 word_count: 10,

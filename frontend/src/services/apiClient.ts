@@ -6,7 +6,6 @@ import type {
   JobRoleSummary,
   ResumeDetail,
   ResumeListItem,
-  SampleResumeSummary,
   SaveBuilderVersionRequest,
   UpdateParsedVersionRequest,
   WorkspaceSessionResponse,
@@ -166,11 +165,6 @@ export async function fetchJobRoleDetail(slug: string): Promise<JobRoleDetail> {
   return requestJson<JobRoleDetail>(`/job-roles/${encodeURIComponent(slug)}`);
 }
 
-export async function fetchSamples(): Promise<SampleResumeSummary[]> {
-  const data = await requestJson<{ samples?: SampleResumeSummary[] }>('/samples');
-  return Array.isArray(data?.samples) ? data.samples : [];
-}
-
 export async function uploadResumeFile(file: File, title?: string): Promise<ResumeDetail> {
   const formData = new FormData();
   formData.append('file', file);
@@ -183,11 +177,8 @@ export async function uploadResumeFile(file: File, title?: string): Promise<Resu
   });
 }
 
-export async function fetchWorkspaceResumes(includeSamples = true): Promise<ResumeListItem[]> {
-  const query = includeSamples ? 'true' : 'false';
-  const data = await requestWithWorkspace<{ resumes?: ResumeListItem[] }>(
-    `/resumes?include_samples=${query}`,
-  );
+export async function fetchWorkspaceResumes(): Promise<ResumeListItem[]> {
+  const data = await requestWithWorkspace<{ resumes?: ResumeListItem[] }>('/resumes');
   return Array.isArray(data?.resumes) ? data.resumes : [];
 }
 

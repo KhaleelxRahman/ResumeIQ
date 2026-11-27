@@ -53,10 +53,9 @@ export interface ResumeVersionRecord {
 
 export interface ResumeRecord {
   id: string;
-  workspace_id: string | null;
+  workspace_id: string;
   title: string;
   source_type: string;
-  is_sample: boolean;
   active_version_id: string | null;
   created_at: string;
   updated_at: string;
