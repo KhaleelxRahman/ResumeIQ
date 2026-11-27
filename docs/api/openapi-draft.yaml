@@ -1,0 +1,171 @@
+openapi: 3.1.0
+info:
+  title: ResumeIQ Flask API
+  version: 0.1.0
+  description: Student-first resume builder, parser, deterministic quality scoring, ATS compatibility estimate, and role skill gap analysis API.
+servers:
+  - url: http://localhost:5000/api
+    description: Local Flask Development Server
+components:
+  securitySchemes:
+    WorkspaceToken:
+      type: apiKey
+      in: header
+      name: X-Workspace-Token
+  schemas:
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: { type: object, additionalProperties: true }
+    WorkspaceSessionResponse:
+      type: object
+      required: [workspace_id, token, expires_at]
+      properties:
+        workspace_id: { type: string, format: uuid }
+        token: { type: string }
+        expires_at: { type: string, format: date-time }
+    CreateAnalysisRequest:
+      type: object
+      required: [resume_version_id, mode, experience_track]
+      properties:
+        resume_version_id: { type: string, format: uuid }
+        mode: { type: string, enum: [role, custom_jd] }
+        job_role_slug: { type: string }
+        custom_jd_title: { type: string }
+        custom_jd_text: { type: string }
+        experience_track: { type: string, enum: [student_fresher, junior, mid] }
+paths:
+  /health:
+    get:
+      summary: Service readiness, database connectivity, and deterministic NLP status
+      responses:
+        '200': { description: Service healthy }
+  /workspaces/session:
+    post:
+      summary: Issue a server-generated cryptographic workspace session token
+      responses:
+        '201':
+          description: Workspace session issued
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WorkspaceSessionResponse' }
+  /workspaces/current:
+    get:
+      summary: Verify active workspace session metadata
+      security: [{ WorkspaceToken: [] }]
+      responses:
+        '200': { description: Active workspace metadata }
+        '401': { description: Missing, invalid, or expired workspace token }
+    delete:
+      summary: Purge current workspace and cascade-delete all owned resumes & analyses
+      security: [{ WorkspaceToken: [] }]
+      responses:
+        '204': { description: Workspace purged }
+  /samples:
+    get:
+      summary: List pre-seeded read-only synthetic demo resumes
+      responses:
+        '200': { description: Synthetic sample list }
+  /job-roles:
+    get:
+      summary: List the 4 mandatory SkillOrbit job roles and skill counts
+      responses:
+        '200': { description: Curated job roles }
+  /job-roles/{slug}:
+    get:
+      summary: Retrieve full mandatory/preferred skill taxonomy for a role
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Role skill taxonomy }
+        '404': { description: Role not found }
+  /resumes/upload:
+    post:
+      summary: Upload PDF or DOCX resume (Phase 5)
+      security: [{ WorkspaceToken: [] }]
+      responses:
+        '201': { description: Parsed resume created }
+        '401': { description: Invalid workspace token }
+        '413': { description: File exceeds 5 MB }
+        '415': { description: Invalid magic bytes or OOXML signature }
+        '422': { description: Empty, corrupted, encrypted, ZIP-bomb, or scanned PDF }
+  /resumes:
+    get:
+      summary: List resumes owned by workspace plus optional synthetic samples
+      security: [{ WorkspaceToken: [] }]
+      responses:
+        '200': { description: Workspace resume list }
+  /resumes/{resumeId}:
+    get:
+      summary: Retrieve parsed resume detail and active version sections
+      security: [{ WorkspaceToken: [] }]
+      parameters:
+        - name: resumeId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Resume detail }
+        '404': { description: Not found or not owned by workspace }
+    delete:
+      summary: Cascade-delete owned resume, versions, sections, and analyses
+      security: [{ WorkspaceToken: [] }]
+      parameters:
+        - name: resumeId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204': { description: Deleted }
+  /resumes/{resumeId}/versions/{versionId}:
+    patch:
+      summary: Update reviewed parsed sections while preserving original raw_text
+      security: [{ WorkspaceToken: [] }]
+      parameters:
+        - name: resumeId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: versionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Updated parsed resume version }
+        '403': { description: Cannot mutate read-only synthetic sample }
+        '404': { description: Not found or not owned by workspace }
+  /analyses:
+    post:
+      summary: Run deterministic resume analysis (Phase 7-8)
+      security: [{ WorkspaceToken: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateAnalysisRequest' }
+      responses:
+        '201': { description: Analysis created }
+  /analyses/{analysisId}/report:
+    get:
+      summary: Export downloadable ReportLab PDF audit report (Phase 10)
+      security: [{ WorkspaceToken: [] }]
+      parameters:
+        - name: analysisId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: PDF audit report
+          content:
+            application/pdf: {}

@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prototype 01 — Landing Hero &amp; 3D Prism Fallback</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-canvas: #090b10;
+      --bg-surface: #11151e;
+      --bg-elevated: #171d29;
+      --border-hairline: rgba(243, 245, 248, 0.09);
+      --text-primary: #f3f5f8;
+      --text-secondary: #9ca7b8;
+      --accent-primary: #7c5cff;
+      --accent-secondary: #38bdf8;
+      --status-success: #22c55e;
+      --font-sans: 'Inter', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg-canvas); color: var(--text-primary); font-family: var(--font-sans); line-height: 1.55; }
+    .topbar {
+      border-bottom: 1px solid var(--border-hairline);
+      padding: 16px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      max-width: 1280px; margin: 0 auto;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -0.02em; font-size: 18px; }
+    .brand-mark {
+      width: 24px; height: 24px; border: 1.5px solid var(--accent-primary); border-radius: 5px;
+      display: grid; place-items: center; font-family: var(--font-mono); font-size: 11px; color: var(--accent-secondary);
+    }
+    .nav { display: flex; gap: 24px; align-items: center; font-size: 14px; color: var(--text-secondary); }
+    .nav a { color: inherit; text-decoration: none; }
+    .nav a:hover { color: var(--text-primary); }
+    .container { max-width: 1280px; margin: 0 auto; padding: 56px 24px 80px; }
+    .hero {
+      display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 48px; align-items: center;
+      padding-bottom: 64px; border-bottom: 1px solid var(--border-hairline);
+    }
+    .pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: var(--font-mono); font-size: 12px; color: var(--accent-secondary);
+      border: 1px solid var(--border-hairline); background: var(--bg-surface);
+      padding: 6px 12px; border-radius: 999px; margin-bottom: 20px;
+    }
+    h1 { font-size: clamp(2.4rem, 4.6vw, 4rem); font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; margin-bottom: 20px; }
+    .hero-copy { color: var(--text-secondary); font-size: 17px; max-width: 54ch; margin-bottom: 28px; }
+    .cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 44px; padding: 0 20px; border-radius: 8px; font-weight: 600; font-size: 14px;
+      text-decoration: none; cursor: pointer; border: 1px solid transparent;
+    }
+    .btn-primary { background: var(--accent-primary); color: #ffffff; }
+    .btn-secondary { background: var(--bg-surface); color: var(--text-primary); border-color: rgba(243,245,248,0.2); }
+    .btn-ghost { background: transparent; color: var(--accent-secondary); border-color: var(--border-hairline); font-family: var(--font-mono); font-size: 13px; }
+    .honesty-note { font-size: 12.5px; color: var(--text-secondary); border-left: 2px solid var(--accent-primary); padding-left: 12px; }
+    .prism-stage {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-radius: 14px;
+      min-height: 420px;
+      padding: 20px;
+      display: flex; flex-direction: column; justify-content: space-between;
+      position: relative;
+    }
+    .stage-meta {
+      display: flex; justify-content: space-between; align-items: center;
+      font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary);
+    }
+    .svg-prism { width: 100%; height: 300px; display: block; }
+    .budget-bar {
+      display: flex; flex-wrap: wrap; gap: 12px; padding-top: 12px;
+      border-top: 1px solid var(--border-hairline);
+      font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary);
+    }
+    .budget-bar span strong { color: var(--text-primary); }
+    .metrics-strip {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+      background: var(--border-hairline); border: 1px solid var(--border-hairline);
+      border-radius: 12px; overflow: hidden; margin-top: 56px;
+    }
+    .metric-cell { background: var(--bg-surface); padding: 28px; }
+    .metric-tag { font-family: var(--font-mono); font-size: 11px; color: var(--accent-secondary); margin-bottom: 10px; }
+    .metric-cell h2 { font-size: 18px; margin-bottom: 8px; }
+    .metric-cell p { font-size: 14px; color: var(--text-secondary); }
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; }
+      .metrics-strip { grid-template-columns: 1fr; }
+      .nav { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">IQ</span> ResumeIQ</div>
+    <nav class="nav" aria-label="Prototype Navigation">
+      <a href="index.html">Prototype Hub</a>
+      <a href="02-resume-builder.html">Builder</a>
+      <a href="03-analysis-workspace.html">Analysis Workspace</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div>
+        <span class="pill">01 // FREE-FIRST STUDENT CAREER INTELLIGENCE</span>
+        <h1>Build ATS-ready resumes. Inspect every score down to the line.</h1>
+        <p class="hero-copy">Upload a PDF/DOCX or build from an ATS-safe editorial template. Get deterministic quality scoring, heuristic ATS checks, and role-specific keyword gaps—without black-box scores or fabricated claims.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="03-analysis-workspace.html">Analyze Existing Resume</a>
+          <a class="btn btn-secondary" href="02-resume-builder.html">Open Resume Builder</a>
+          <a class="btn btn-ghost" href="03-analysis-workspace.html">Try Synthetic Sample</a>
+        </div>
+        <p class="honesty-note">Transparent rubric: ATS Compatibility is an automated simulation estimate, not an employer guarantee. Zero personal resumes stored publicly.</p>
+      </div>
+
+      <aside class="prism-stage" aria-label="3D Document Prism Placeholder and Performance Spec">
+        <div class="stage-meta">
+          <span>CALIBRATION PRISM // R3F + SVG FALLBACK</span>
+          <span>&lt;= 6,000 TRIS</span>
+        </div>
+        <svg class="svg-prism" viewBox="0 0 420 280" role="img" aria-label="Layered geometric resume planes aligning along a calibration axis">
+          <defs>
+            <linearGradient id="planeA" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#1D2434" />
+              <stop offset="100%" stop-color="#0E121B" />
+            </linearGradient>
+          </defs>
+          <!-- Calibration Grid Lines -->
+          <line x1="40" y1="240" x2="380" y2="240" stroke="rgba(243,245,248,0.12)" stroke-width="1" />
+          <line x1="210" y1="20" x2="210" y2="255" stroke="rgba(124,92,255,0.35)" stroke-dasharray="4 4" stroke-width="1" />
+          <!-- Back Plane (Raw Text) -->
+          <polygon points="105,65 265,35 305,175 145,205" fill="url(#planeA)" stroke="rgba(243,245,248,0.18)" stroke-width="1.2" />
+          <!-- Mid Plane (Parsed Sections) -->
+          <polygon points="120,82 280,52 320,192 160,222" fill="rgba(17,21,30,0.9)" stroke="#38BDF8" stroke-width="1.2" />
+          <!-- Front Plane (Verified Output) -->
+          <polygon points="135,98 295,68 335,208 175,238" fill="#171D29" stroke="#7C5CFF" stroke-width="1.6" />
+          <!-- Structured Data Bars on Front Plane -->
+          <line x1="168" y1="115" x2="270" y2="96" stroke="#F3F5F8" stroke-width="3" stroke-linecap="round" />
+          <line x1="175" y1="138" x2="255" y2="123" stroke="#9CA7B8" stroke-width="2" stroke-linecap="round" />
+          <line x1="181" y1="158" x2="275" y2="140" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round" />
+          <circle cx="298" cy="145" r="14" fill="none" stroke="#38BDF8" stroke-width="1.5" />
+          <text x="298" y="149" text-anchor="middle" fill="#F3F5F8" font-family="JetBrains Mono, monospace" font-size="9">86</text>
+        </svg>
+        <div class="budget-bar">
+          <span>Draw Calls: <strong>&lt;= 12</strong></span>
+          <span>DPR: <strong>[1, 1.75]</strong></span>
+          <span>Mobile (&lt;768px): <strong>Static SVG</strong></span>
+          <span>Reduced Motion: <strong>Zero RAF</strong></span>
+        </div>
+      </aside>
+    </section>
+
+    <section class="metrics-strip" aria-label="Three Distinct Diagnostic Metrics">
+      <article class="metric-cell">
+        <div class="metric-tag">01 // RESUME QUALITY SCORE (0-100)</div>
+        <h2>Student-Fair Structural Audit</h2>
+        <p>Evaluates Structure, Skills, Education, Projects, Contact, and Completeness—reallocating internship weight when students showcase strong projects.</p>
+      </article>
+      <article class="metric-cell">
+        <div class="metric-tag">02 // ATS COMPATIBILITY ESTIMATE</div>
+        <h2>Parser Hygiene Simulation</h2>
+        <p>Flags multi-column extraction risks, Word table pitfalls, weak headings, and keyword coverage without making false employer guarantees.</p>
+      </article>
+      <article class="metric-cell">
+        <div class="metric-tag">03 // ROLE SKILL MATCH (%)</div>
+        <h2>Evidence-Backed Gap Matrix</h2>
+        <p>Compares against Data Analyst, Web Developer, AI Engineer, Cloud Engineer, or a Custom JD—showing exact proof snippets behind every skill.</p>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

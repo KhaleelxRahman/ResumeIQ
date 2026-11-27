@@ -1,0 +1,39 @@
+# Python & Backend
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.db
+*.sqlite
+*.sqlite3
+backend/uploads/
+backend/tmp/
+
+# Secrets & Environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Node, TypeScript & Frontend
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.tsbuildinfo
+*.local
+npm-debug.log*
+playwright-report/
+test-results/
+
+# OS & Editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

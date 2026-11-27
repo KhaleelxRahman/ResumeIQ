@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prototype 02 — Student Resume Builder &amp; 2 ATS Templates</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-canvas: #090b10;
+      --bg-surface: #11151e;
+      --bg-elevated: #171d29;
+      --border-hairline: rgba(243, 245, 248, 0.09);
+      --border-strong: rgba(243, 245, 248, 0.22);
+      --text-primary: #f3f5f8;
+      --text-secondary: #9ca7b8;
+      --accent-primary: #7c5cff;
+      --accent-secondary: #38bdf8;
+      --font-sans: 'Inter', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg-canvas); color: var(--text-primary); font-family: var(--font-sans); line-height: 1.5; }
+    .topbar {
+      border-bottom: 1px solid var(--border-hairline);
+      padding: 14px 24px;
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
+      background: var(--bg-surface);
+    }
+    .brand { font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 10px; }
+    .badge { font-family: var(--font-mono); font-size: 11px; padding: 4px 8px; border-radius: 5px; background: var(--bg-elevated); border: 1px solid var(--border-hairline); color: var(--accent-secondary); }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .btn {
+      min-height: 40px; padding: 0 14px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      border: 1px solid var(--border-strong); background: var(--bg-elevated); color: var(--text-primary); cursor: pointer;
+    }
+    .btn-primary { background: var(--accent-primary); border-color: transparent; color: #fff; }
+    .btn-muted { opacity: 0.65; cursor: not-allowed; }
+    .workspace {
+      display: grid; grid-template-columns: 1fr 1.05fr; gap: 24px;
+      max-width: 1360px; margin: 0 auto; padding: 24px;
+    }
+    .editor-pane { display: flex; flex-direction: column; gap: 16px; }
+    .section-card {
+      background: var(--bg-surface); border: 1px solid var(--border-hairline);
+      border-radius: 10px; padding: 18px;
+    }
+    .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .section-head h2 { font-size: 15px; font-weight: 600; }
+    .section-head span { font-family: var(--font-mono); font-size: 11px; color: var(--accent-secondary); }
+    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .field label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 5px; }
+    .field input, .field textarea {
+      width: 100%; background: var(--bg-canvas); color: var(--text-primary);
+      border: 1px solid var(--border-strong); border-radius: 6px; padding: 9px 11px; font-size: 13px; font-family: inherit;
+    }
+    .field-full { grid-column: 1 / -1; }
+    .preview-pane {
+      background: var(--bg-surface); border: 1px solid var(--border-hairline);
+      border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 14px;
+    }
+    /* Pure CSS Template Switcher */
+    .tpl-radio { display: none; }
+    .tpl-tabs { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center; }
+    .tpl-labels { display: flex; gap: 8px; }
+    .tpl-label {
+      font-family: var(--font-mono); font-size: 12px; padding: 8px 12px; border-radius: 6px;
+      border: 1px solid var(--border-hairline); color: var(--text-secondary); cursor: pointer;
+    }
+    #tpl-swiss:checked ~ .tpl-tabs label[for="tpl-swiss"],
+    #tpl-academic:checked ~ .tpl-tabs label[for="tpl-academic"] {
+      border-color: var(--accent-primary); background: rgba(124, 92, 255, 0.14); color: var(--text-primary);
+    }
+    .paper {
+      background: #ffffff; color: #111827; border-radius: 4px; padding: 34px 36px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+      min-height: 620px; font-size: 12.5px; line-height: 1.45;
+    }
+    .paper h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; margin: 14px 0 6px; padding-bottom: 3px; border-bottom: 1px solid #d1d5db; color: #111827; }
+    .paper ul { padding-left: 18px; margin-top: 4px; }
+    .paper li { margin-bottom: 3px; }
+    .paper-meta { color: #4b5563; font-size: 11.5px; margin-bottom: 10px; }
+    .tpl-academic-view { display: none; font-family: Georgia, 'Times New Roman', serif; }
+    #tpl-academic:checked ~ .paper .tpl-swiss-view { display: none; }
+    #tpl-academic:checked ~ .paper .tpl-academic-view { display: block; }
+    .academic-header { text-align: center; border-bottom: 2px solid #111827; padding-bottom: 8px; margin-bottom: 10px; }
+    .swiss-header { border-left: 3px solid #111827; padding-left: 12px; margin-bottom: 10px; }
+    @media (max-width: 960px) {
+      .workspace { grid-template-columns: 1fr; }
+      .field-grid { grid-template-columns: 1fr; }
+      .paper { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <a href="index.html" style="color:var(--text-secondary);text-decoration:none;font-size:13px;">&lt;- Hub</a>
+      <span>ResumeIQ Builder</span>
+      <span class="badge">VERSION v2 // SAVED</span>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn">Export PDF (ReportLab)</button>
+      <button type="button" class="btn btn-muted" title="Deferred until core Analyzer and QA complete">DOCX (Post-Core)</button>
+      <a href="03-analysis-workspace.html" class="btn btn-primary" style="display:inline-flex;align-items:center;text-decoration:none;">Analyze Built Resume -&gt;</a>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <section class="editor-pane" aria-label="Resume Section Editor">
+      <div class="section-card">
+        <div class="section-head"><h2>01 // Personal &amp; Links</h2><span>Contact (10 pts)</span></div>
+        <div class="field-grid">
+          <div class="field"><label for="fn">Full Name</label><input id="fn" value="Aarav Nair" readonly /></div>
+          <div class="field"><label for="em">Email</label><input id="em" value="aarav.nair@student.edu" readonly /></div>
+          <div class="field"><label for="gh">GitHub URL</label><input id="gh" value="github.com/aarav-dev" readonly /></div>
+          <div class="field"><label for="li">LinkedIn URL</label><input id="li" value="linkedin.com/in/aarav-nair" readonly /></div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-head"><h2>02 // Education</h2><span>Education (15 pts)</span></div>
+        <div class="field-grid">
+          <div class="field field-full"><label for="deg">Degree &amp; Institution</label><input id="deg" value="B.Tech in Computer Science — RV Institute of Technology (2023–2027)" readonly /></div>
+          <div class="field"><label for="gpa">CGPA</label><input id="gpa" value="8.7 / 10.0" readonly /></div>
+          <div class="field"><label for="cw">Relevant Coursework</label><input id="cw" value="DBMS, Data Structures, Operating Systems, ML" readonly /></div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-head"><h2>03 // Technical Projects</h2><span>Projects (15 pts + Fresher Fairness)</span></div>
+        <div class="field-grid">
+          <div class="field field-full"><label for="proj">Project 1 Title &amp; Stack</label><input id="proj" value="Campus Transit Tracker — Python, Flask, PostgreSQL, React" readonly /></div>
+          <div class="field field-full"><label for="bul">Impact Bullet (Verified Facts Only)</label><textarea id="bul" rows="2" readonly>Built REST API endpoints and interactive route map serving live bus arrival estimates for student testers.</textarea></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="preview-pane" aria-label="Live ATS-Safe Paper Preview">
+      <input class="tpl-radio" type="radio" name="tpl" id="tpl-swiss" checked />
+      <input class="tpl-radio" type="radio" name="tpl" id="tpl-academic" />
+
+      <div class="tpl-tabs">
+        <div class="tpl-labels">
+          <label class="tpl-label" for="tpl-swiss">Template A: Swiss Technical</label>
+          <label class="tpl-label" for="tpl-academic">Template B: Academic Editorial</label>
+        </div>
+        <span class="badge">SINGLE-COLUMN ATS SAFE</span>
+      </div>
+
+      <article class="paper" aria-label="Rendered Resume Preview">
+        <!-- Template A -->
+        <div class="tpl-swiss-view">
+          <div class="swiss-header">
+            <h1 style="font-size:20px;letter-spacing:-0.02em;">Aarav Nair</h1>
+            <p class="paper-meta">Bengaluru, IN | aarav.nair@student.edu | +91-98XXXX1204 | github.com/aarav-dev</p>
+          </div>
+          <h3>Technical Skills</h3>
+          <p><strong>Languages:</strong> Python, TypeScript, SQL &nbsp;|&nbsp; <strong>Frameworks:</strong> Flask, React, Tailwind CSS &nbsp;|&nbsp; <strong>Data &amp; Tools:</strong> PostgreSQL, Git, Docker</p>
+          <h3>Projects</h3>
+          <p><strong>Campus Transit Tracker</strong> — <em>Python, Flask, PostgreSQL, React</em></p>
+          <ul>
+            <li>Built REST API endpoints and spatial stop indexing for live shuttle ETA display.</li>
+            <li>Implemented automated Pytest suite verifying schedule edge cases across 4 campus routes.</li>
+          </ul>
+          <p style="margin-top:8px;"><strong>Retail Sales Cohort Notebook</strong> — <em>Python, Pandas, SQLite</em></p>
+          <ul>
+            <li>Cleaned 18,000 synthetic order records and built cohort retention visualizations.</li>
+          </ul>
+          <h3>Education</h3>
+          <p><strong>B.Tech in Computer Science</strong> — RV Institute of Technology (Expected 2027) | CGPA: 8.7/10</p>
+          <h3>Certifications</h3>
+          <p>AWS Cloud Practitioner Essentials (Coursework Completion)</p>
+        </div>
+
+        <!-- Template B -->
+        <div class="tpl-academic-view">
+          <div class="academic-header">
+            <h1 style="font-size:21px;">AARAV NAIR</h1>
+            <p class="paper-meta">aarav.nair@student.edu &bull; github.com/aarav-dev &bull; linkedin.com/in/aarav-nair</p>
+          </div>
+          <h3>Education</h3>
+          <p><strong>RV Institute of Technology</strong> — B.Tech, Computer Science (2023 – 2027) &bull; CGPA: 8.7/10</p>
+          <p>Coursework: Data Structures, Database Management Systems, Operating Systems</p>
+          <h3>Technical Skills</h3>
+          <ul>
+            <li><strong>Programming:</strong> Python, TypeScript, SQL, HTML/CSS</li>
+            <li><strong>Libraries &amp; Databases:</strong> Flask, React, Pandas, PostgreSQL, Git</li>
+          </ul>
+          <h3>Academic &amp; Technical Projects</h3>
+          <p><strong>Campus Transit Tracker</strong> (Flask, PostgreSQL, React)</p>
+          <ul>
+            <li>Designed normalized schedule schema and REST routes for campus shuttle tracking.</li>
+            <li>Wrote automated unit tests covering timetable lookups and error handling.</li>
+          </ul>
+          <h3>Achievements &amp; Certifications</h3>
+          <ul>
+            <li>Finalist, Campus Civic Hackathon (2025) — Built transit prototype within 24 hours.</li>
+          </ul>
+        </div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>
