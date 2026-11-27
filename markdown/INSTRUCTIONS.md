@@ -30,7 +30,7 @@ This manual governs all engineering work performed on **ResumeIQ** across phases
 
 ## 3. Testing & Verification Discipline
 
-- Every backend parser, scorer, and skill rule requires unit tests using synthetic fixtures in `backend/tests/fixtures/`.
+- Every backend parser, scorer, and skill rule requires unit tests using synthetic in-memory/programmatic fixtures inside `backend/tests/`.
 - Never commit real personal resumes to Git.
 - **No Unverified Claims:** Never state *"tests pass"* or *"feature works"* unless the exact test command was run *after* the final edit and its observed output confirmed 100% pass without skipped assertions.
 - Record milestone verification evidence in `markdown/docs/testing/`.

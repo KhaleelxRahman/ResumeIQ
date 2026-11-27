@@ -56,6 +56,7 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/WorkspaceSessionResponse' }
+        '429': { description: Rate limit exceeded }
   /workspaces/current:
     get:
       summary: Verify active workspace session metadata
@@ -68,11 +69,23 @@ paths:
       security: [{ WorkspaceToken: [] }]
       responses:
         '204': { description: Workspace purged }
+        '429': { description: Rate limit exceeded }
   /samples:
     get:
       summary: List pre-seeded read-only synthetic demo resumes
       responses:
         '200': { description: Synthetic sample list }
+  /samples/{sampleId}:
+    get:
+      summary: Retrieve read-only synthetic sample sections, detected skills, and masked contact flags
+      parameters:
+        - name: sampleId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Synthetic sample detail }
+        '404': { description: Sample not found }
   /job-roles:
     get:
       summary: List the 4 mandatory SkillOrbit job roles and skill counts
@@ -98,7 +111,8 @@ paths:
         '401': { description: Invalid workspace token }
         '413': { description: File exceeds 5 MB }
         '415': { description: Invalid magic bytes or OOXML signature }
-        '422': { description: Empty, corrupted, encrypted, ZIP-bomb, or scanned PDF }
+        '422': { description: Empty, corrupted, encrypted, ZIP-bomb/XXE, or scanned/outlined PDF }
+        '429': { description: Rate limit or workspace resume quota exceeded }
   /resumes:
     get:
       summary: List resumes owned by workspace plus optional synthetic samples
@@ -129,7 +143,7 @@ paths:
         '204': { description: Deleted }
   /resumes/{resumeId}/versions/{versionId}:
     patch:
-      summary: Update reviewed parsed sections while preserving original raw_text
+      summary: Update reviewed parsed sections while preserving original raw_text and recalculating derived skills/word_count/contact flags (forbids client structured_payload overrides)
       security: [{ WorkspaceToken: [] }]
       parameters:
         - name: resumeId
@@ -142,6 +156,7 @@ paths:
           schema: { type: string, format: uuid }
       responses:
         '200': { description: Updated parsed resume version }
+        '400': { description: Invalid JSON or disallowed client structured_payload override }
         '403': { description: Cannot mutate read-only synthetic sample }
         '404': { description: Not found or not owned by workspace }
   /analyses:

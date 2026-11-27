@@ -36,11 +36,11 @@ Resumes contain sensitive Personal Identifiable Information (PII): legal names, 
 
 | Control | Implementation Rule |
 |---|---|
-| **Size Limit** | Enforce `MAX_UPLOAD_BYTES = 5 * 1024 * 1024` (5 MB) via Flask `MAX_CONTENT_LENGTH` and streaming byte check (`413 Content Too Large`). |
-| **Extension & MIME Check** | Accept only `.pdf` (`application/pdf`) and `.docx` (`application/vnd.openxmlformats-officedocument.wordprocessingml.document`). |
-| **Magic-Byte Inspection** | Verify `%PDF-` header bytes for PDF; verify `PK\x03\x04` ZIP archive signature containing `word/document.xml` for DOCX (`415 Unsupported Media Type` on mismatch). |
-| **ZIP Bomb Mitigation** | When inspecting DOCX archives, verify total uncompressed archive size `< 25 MB` before XML parsing. |
-| **Path Traversal Protection** | Never construct disk paths from uploaded filenames (`secure_filename` used strictly for sanitized display metadata; disk writes always use `uuid4()` inside `TemporaryDirectory`). |
+| **Size Limit** | Enforce exact `MAX_UPLOAD_BYTES = 5 * 1024 * 1024` (`5 MB`) in `validate_upload_metadata` / `_read_bounded_upload_bytes`, while allocating `MULTIPART_OVERHEAD_BYTES` (`256 KB`) headroom in Flask `MAX_CONTENT_LENGTH` (`413 Content Too Large`). |
+| **Extension & MIME Check** | Accept only `.pdf` and `.docx` matching documented PDF/DOCX MIME types (`application/octet-stream` permitted only alongside valid binary magic bytes). |
+| **Magic-Byte Inspection** | Reject disguised executables/markup/images (`MZ`, `ELF`, PNG, JPEG, GIF, HTML/SVG/XML), OLE2 legacy/encrypted docs, and mismatched signatures; verify `%PDF-` for PDF and `PK\x03\x04` containing `word/document.xml` (without macros/`vbaProject.bin`) for DOCX (`415`). |
+| **ZIP Bomb & XXE Mitigation** | Stream decompressed DOCX entries (`64 KB` chunks) enforcing `<= 25 MB` total, `<= 12 MB` single entry, `<= 250` entries, `<= 120:1` compression ratio (entries `>= 4 KB`), encrypted-entry blocking, and `<!DOCTYPE`/`<!ENTITY` XML rejection (`422`). |
+| **Path Traversal Protection** | Never construct disk paths from uploaded filenames (`sanitize_display_filename` sanitizes UI display metadata while OOXML entry paths reject `..`, `/`, `:`; disk writes always use `uuid4()` inside `TemporaryDirectory`). |
 
 ---
 
@@ -49,4 +49,5 @@ Resumes contain sensitive Personal Identifiable Information (PII): legal names, 
 - **SQL Injection Protection:** SQLAlchemy 2.0 parameterized ORM queries exclusively.
 - **CORS Restrictions:** Strict `CORS_ORIGINS` allowlist (`X-Workspace-Token`, `Content-Type` allowed; `Content-Disposition` exposed).
 - **Safe Error Responses:** No stack traces, SQL strings, or filesystem paths leaked in HTTP responses.
+- **PII Masking & Payload Integrity:** `masked_contact_json` masks email addresses (`r***@domain`), phone numbers (`***-***-1234`), LinkedIn slugs (`linkedin.com/in/r***`), GitHub usernames (`github.com/r***`), and portfolio domains/paths (`p***.r***.dev/***`) — never exposing full contact URLs. `PATCH /api/resumes/:id/versions/:versionId` forbids client `structured_payload` overrides (`extra="forbid"`) and recomputes derived skills, word count, and contact signals purely on the server while keeping immutable `raw_text`.
 - **Secrets Hygiene:** `.env` ignored in `.gitignore`; `.env.example` holds keys/defaults only.

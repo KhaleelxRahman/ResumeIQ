@@ -40,9 +40,16 @@ def run_migrations_online() -> None:
     url = get_database_url()
     connectable = build_engine(url)
     if url.startswith("sqlite"):
-        # Avoid StaticPool edge issues during offline/batch migrations.
-        from sqlalchemy import create_engine
+        # Avoid StaticPool edge issues during offline/batch migrations while keeping FK enforcement active.
+        from sqlalchemy import create_engine, event
+
         connectable = create_engine(url, poolclass=pool.NullPool)
+
+        @event.listens_for(connectable, "connect")
+        def _set_sqlite_fk_pragma(dbapi_connection, _connection_record) -> None:
+            cursor = dbapi_connection.cursor()
+            cursor.execute("PRAGMA foreign_keys=ON")
+            cursor.close()
 
     with connectable.connect() as connection:
         context.configure(

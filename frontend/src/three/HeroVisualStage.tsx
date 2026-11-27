@@ -37,7 +37,7 @@ export function HeroVisualStage() {
   return (
     <aside
       aria-label="Visual Calibration Stage"
-      className="flex min-h-[380px] w-full flex-col justify-between rounded-[14px] border border-[var(--border-hairline)] bg-[var(--bg-surface)]"
+      className="flex min-h-[420px] w-full flex-col justify-between rounded-[14px] border border-[var(--border-hairline)] bg-[var(--bg-surface)]"
     >
       {allow3D ? (
         <WebGLErrorBoundary fallback={<StaticPrismFallback />}>

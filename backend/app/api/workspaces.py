@@ -2,7 +2,12 @@ from __future__ import annotations
 
 from flask import Blueprint, current_app, g, jsonify
 
-from app.api.auth_workspace import issue_workspace_session, require_workspace
+from app.api.auth_workspace import (
+    issue_workspace_session,
+    purge_expired_workspaces,
+    require_workspace,
+)
+from app.api.rate_limit import enforce_rate_limit
 from app.models.entities import Workspace
 from app.schemas.contracts import (
     WorkspaceSessionCreateResponse,
@@ -16,6 +21,8 @@ workspaces_bp = Blueprint("workspaces", __name__, url_prefix="/workspaces")
 def create_workspace_session():
     """Issue a fresh server-generated cryptographic workspace session token."""
     cfg = current_app.config["APP_CONFIG"]
+    enforce_rate_limit("workspace_session_create", cfg.RATE_LIMIT_SESSION_PER_MIN, window_seconds=60)
+    purge_expired_workspaces(g.db_session, limit=25)
     workspace, raw_token = issue_workspace_session(g.db_session, ttl_days=cfg.WORKSPACE_TTL_DAYS)
     g.db_session.commit()
     payload = WorkspaceSessionCreateResponse(
@@ -44,6 +51,8 @@ def get_current_workspace():
 @require_workspace
 def delete_current_workspace():
     """Permanently purge the active workspace and cascade-delete all owned data."""
+    cfg = current_app.config["APP_CONFIG"]
+    enforce_rate_limit("workspace_delete", cfg.RATE_LIMIT_DELETE_PER_MIN, window_seconds=60)
     ws: Workspace = g.workspace
     g.db_session.delete(ws)
     g.db_session.commit()

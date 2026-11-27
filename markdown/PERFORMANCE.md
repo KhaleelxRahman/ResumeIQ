@@ -8,11 +8,11 @@
 
 | Metric / Asset | Target Budget | Enforcement Mechanism |
 |---|---|---|
-| **Core JS Shell (gzipped, excl. lazy 3D/Recharts)** | `<= 180 KB` | Route-level `React.lazy()` code splitting; zero 3D/Recharts bundled on critical path. |
-| **3D Hero Chunk (`three` + `@react-three/fiber`)** | Lazy-loaded on `/` desktop (`>= 768px`) only | Never loaded on `/builder`, `/analyze`, `/results`, `/history`, mobile (`< 768px`), or `prefers-reduced-motion`. |
-| **WebGL Geometry & Draw Calls** | `<= 6,000` triangles, `<= 12` draw calls | Procedural obsidian planes + wireframe scan lines; zero heavy GLB textures, zero shadow maps, zero post-processing bloom passes. |
-| **DPR & Frame Lifecycle** | `dpr={[1, 1.75]}`, pause on hidden tab | Dispose geometries/materials on unmount; clamp `frameloop="demand"` or pause when offscreen (`IntersectionObserver`). |
-| **CLS & LCP** | `CLS < 0.05`, `LCP < 2.5s` | Left-column editorial Hero H1 & CTA paint immediately in HTML/CSS; right-column 3D reserves fixed aspect container. |
+| **Core JS Shell (gzipped, excl. lazy 3D/Recharts)** | `<= 180 KB` | Route-level `React.lazy()` code splitting; measured core shell JS `~76.8 kB` gzipped (`5.71 kB` CSS gzipped). |
+| **3D Hero Chunk (`three` + `@react-three/fiber`)** | Lazy-loaded on `/` desktop (`>= 768px`) only | Never loaded on `/builder`, `/analyze`, `/results`, `/history`, mobile (`< 768px`), or `prefers-reduced-motion`. Measured lazy `vendor-three`: `805.56 kB` minified / `212.83 kB` gzipped (`@react-three/drei` removed). |
+| **WebGL Geometry & Draw Calls** | `<= 6,000` triangles, `<= 12` draw calls | Actual scene renders `612` triangles and `4` draw calls; zero `.glb` textures, shadow maps, or bloom passes. |
+| **DPR & Frame Lifecycle** | `dpr={[1, 1.75]}`, pause on hidden tab | Disposes geometries/materials cleanly on unmount; handles `webglcontextlost`/`webglcontextrestored`; pauses offscreen via `IntersectionObserver`. |
+| **CLS & LCP** | `CLS < 0.05`, `LCP < 2.5s` *(target)* | Left-column editorial Hero H1 & CTA paint immediately; right-column reserves `min-h-[420px]` box matching Prototype 01. |
 
 ---
 

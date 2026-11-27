@@ -6,16 +6,16 @@
 
 | Layer | Approved Choice | Rationale & SkillOrbit Alignment |
 |---|---|---|
-| **Frontend** | React `18.3`, TypeScript `5.x`, Vite `6.x`, Tailwind CSS `v4`, React Router `v6/v7` | React `18.3` guarantees stable compatibility with `@react-three/fiber@8` and `@react-three/drei@9`. |
-| **3D & Motion** | `three`, `@react-three/fiber`, `@react-three/drei`, `framer-motion` *(plus strictly bounded GSAP only if needed for static scroll scrub on Landing)* | Enforces strict `<= 6,000` triangle and `<= 180 KB` shell budgets (`markdown/docs/design/3d-performance-budget.md`). |
-| **Charts & Icons** | `recharts`, `lucide-react` | Recharts for radar/bar/trend charts; Lucide for uniform vector iconography. |
-| **Backend** | **Python Flask `3.x`**, **Flask-CORS**, **Pydantic v2**, **SQLAlchemy `2.0`**, **Alembic**, **Gunicorn (`gthread`)** | Matches SkillOrbit PDF p. 6 (`Backend: Python Flask`) verbatim while retaining Pydantic v2 DTO contracts and framework-free domain modules (`ADR-001`). |
-| **Database** | **Neon PostgreSQL** (production via `DATABASE_URL` + `psycopg`), **SQLite** (local dev & `pytest`) | Eliminates ephemeral Render disk data loss; Neon free tier (`1 GB` storage, `100 CU-hrs/mo`, 5-min auto-suspend) handled via `pool_pre_ping=True`. |
-| **Parsing & PDF** | `PyMuPDF` (`fitz`), `python-docx`, `ReportLab` | Coordinate-aware PDF blocks, DOCX paragraph+table extraction, pure-Python ReportLab PDF resumes & audit reports. |
-| **Core AI / NLP** | `spaCy` (`en_core_web_sm`), `NLTK` (`stopwords`, `punkt_tab`), pure-Python TF-IDF & canonical skill matcher | 100% deterministic & SkillOrbit-compliant (`p. 6`: *spaCy and NLTK*); `< 250–350 MB` RSS fits Render's 512 MB cap cleanly. |
-| **Testing** | `pytest`, Flask `app.test_client()`, `Vitest`, `@testing-library/react`, `Playwright` | Automated unit, integration, and responsive UI verification. |
+| **Frontend** | React `18.3`, TypeScript `5.7`, Vite `8.4`, Tailwind CSS `v4`, React Router `v7` | React `18.3` guarantees stable compatibility with `@react-three/fiber@8` and Vite `8.4` Rolldown bundling. |
+| **3D & Motion** | `three`, `@react-three/fiber`, `framer-motion` *(GSAP excluded from workspace; unused `@react-three/drei` removed)* | Enforces strict `<= 6,000` triangle (`612` actual) and `<= 180 KB` shell (`76.8 kB` gzip) budgets ([3d-performance-budget.md](docs/design/3d-performance-budget.md)). |
+| **Charts & Icons** | `lucide-react` *(live)*; `recharts` *(scheduled Phase 10)* | Lucide active across routes; Recharts reserved for Results/History dashboards. |
+| **Backend** | **Python Flask `3.1`**, **Flask-CORS**, **Pydantic v2**, **SQLAlchemy `2.1`**, **Alembic**, **Gunicorn (`gthread` on Unix)** | Matches SkillOrbit PDF p. 6 (`Backend: Python Flask`) verbatim while retaining Pydantic v2 DTO contracts and framework-free domain modules (`ADR-001`). |
+| **Database** | **Neon PostgreSQL** (production target via `DATABASE_URL` + `psycopg`), **SQLite** (verified local dev & `pytest`) | Eliminates ephemeral Render disk data loss; Neon compatibility verified via PG DDL compilation; live Neon test awaits Phase 13. |
+| **Parsing & PDF** | `PyMuPDF` (`fitz`), `python-docx` *(live Phase 5)*; `ReportLab` *(scheduled Phases 6 & 10)* | Coordinate-aware PDF blocks, DOCX paragraph+table extraction, bounded streaming ZIP inspection; ReportLab deferred to Phase 6. |
+| **Core AI / NLP** | Deterministic regex/boundary/disambiguation `skill_matcher` *(live Phases 4–5)*; `spaCy` + `NLTK` *(scheduled Phases 7–8)* | 100% deterministic & SkillOrbit-compliant; `spaCy`/`NLTK` intentionally deferred to Phase 7–8 installation. |
+| **Testing** | `pytest`, Flask `app.test_client()`, `Vitest`, `@testing-library/react`, `Playwright` *(Phases 0–5 E2E verified; Phase 12 full regression)* | Automated unit & integration suites plus Phase 0–5 Playwright Chromium E2E active; full suite target in Phase 12. |
 
-> **Python 3.13.17 Local Runtime Note:** Since the local environment runs `Python 3.13.17`, Phase 4 setup will verify pre-built binary wheels for `Flask`, `pydantic`, `psycopg[binary]`, `PyMuPDF`, `python-docx`, `spacy`, `nltk`, and `reportlab` inside the project venv prior to locking `requirements.txt`.
+> **Python 3.13.17 Local Runtime Note:** Pre-built wheels for Phases 4–5 (`Flask 3.1.3`, `pydantic 2.14.4`, `SQLAlchemy 2.1.9`, `alembic 1.20.1`, `psycopg-binary 3.3.9`, `PyMuPDF 1.28.2`, `python-docx 1.2.0`) are installed and verified inside `backend/.venv`. `spacy`, `nltk`, and `reportlab` are scheduled for Phases 6–9 installation.
 
 ---
 

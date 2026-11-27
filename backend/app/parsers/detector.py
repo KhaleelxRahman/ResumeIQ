@@ -7,8 +7,11 @@ from pathlib import Path
 
 DEFAULT_MAX_UPLOAD_BYTES = 5 * 1024 * 1024  # 5 MB strict limit
 MAX_DOCX_UNCOMPRESSED_BYTES = 25 * 1024 * 1024  # 25 MB ZIP-bomb ceiling
+MAX_DOCX_SINGLE_ENTRY_BYTES = 12 * 1024 * 1024  # 12 MB single XML/asset ceiling
 MAX_DOCX_ENTRY_COUNT = 250
 MAX_DOCX_COMPRESSION_RATIO = 120.0
+MIN_DOCX_RATIO_CHECK_BYTES = 4096
+_STREAM_READ_CHUNK_BYTES = 65536
 
 ALLOWED_EXTENSIONS = {"pdf", "docx"}
 
@@ -28,6 +31,15 @@ ALLOWED_DOCX_MIMES = {
 
 _OLE2_HEADER = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
 _ZIP_LOCAL_HEADER = b"PK\x03\x04"
+_DISALLOWED_MAGIC_PREFIXES = (
+    (b"MZ", "executable binary"),
+    (b"\x7fELF", "ELF binary"),
+    (b"\x89PNG\r\n\x1a\n", "PNG image"),
+    (b"\xff\xd8\xff", "JPEG image"),
+    (b"GIF87a", "GIF image"),
+    (b"GIF89a", "GIF image"),
+    (b"{\\rtf", "RTF document"),
+)
 
 
 class DocumentValidationError(Exception):
@@ -113,15 +125,45 @@ def validate_upload_metadata(
     )
 
 
+def _reject_disguised_binary_header(head: bytes, expected_extension: str) -> None:
+    """Reject spoofed binary or markup signatures independently of client Content-Type headers."""
+    for prefix, label in _DISALLOWED_MAGIC_PREFIXES:
+        if head.startswith(prefix):
+            raise DocumentValidationError(
+                415,
+                "INVALID_FILE_SIGNATURE",
+                f"Uploaded payload is a {label}, not a valid .{expected_extension} resume.",
+                {"detected_format": label, "expected_extension": expected_extension},
+            )
+
+    stripped_lower = head.lstrip().lower()
+    if stripped_lower.startswith((b"<!doctype", b"<html", b"<script", b"<svg", b"<?xml")):
+        raise DocumentValidationError(
+            415,
+            "INVALID_FILE_SIGNATURE",
+            f"Uploaded markup/script payload is not a valid .{expected_extension} resume.",
+            {"expected_extension": expected_extension},
+        )
+
+
 def validate_file_signature(file_path: Path, extension: str) -> None:
-    """Inspect binary magic bytes, OOXML structure, and ZIP-bomb safety."""
+    """Inspect binary magic bytes, OOXML structure, and bounded ZIP decompression safety."""
     if not file_path.exists() or file_path.stat().st_size == 0:
         raise DocumentValidationError(422, "EMPTY_DOCUMENT", "The uploaded file is empty.")
 
     with file_path.open("rb") as fh:
         head = fh.read(1024)
 
+    _reject_disguised_binary_header(head, expected_extension=extension)
+
     if extension == "pdf":
+        if head.startswith(_ZIP_LOCAL_HEADER):
+            raise DocumentValidationError(
+                415,
+                "INVALID_FILE_SIGNATURE",
+                "Uploaded bytes appear to be a ZIP/DOCX container rather than a PDF document.",
+                {"expected_extension": "pdf"},
+            )
         # PDF spec allows leading whitespace/BOM before %PDF- within first 1024 bytes.
         if b"%PDF-" not in head:
             raise DocumentValidationError(
@@ -139,6 +181,14 @@ def validate_file_signature(file_path: Path, extension: str) -> None:
                 "Legacy .doc or password-encrypted Office files are not supported. Export an unencrypted .docx file.",
             )
 
+        if b"%PDF-" in head[:16]:
+            raise DocumentValidationError(
+                415,
+                "INVALID_FILE_SIGNATURE",
+                "Uploaded bytes match a PDF document rather than a DOCX OOXML archive.",
+                {"expected_extension": "docx"},
+            )
+
         if not head.startswith(_ZIP_LOCAL_HEADER):
             raise DocumentValidationError(
                 415,
@@ -153,7 +203,11 @@ def validate_file_signature(file_path: Path, extension: str) -> None:
 
 
 def _validate_ooxml_zip_safety(file_path: Path) -> None:
-    """Verify OOXML structure and guard against ZIP bombs, path traversal, and macros."""
+    """
+    Verify OOXML structure by streaming actual decompressed entry bytes rather
+    than trusting central-directory metadata alone. Blocks ZIP bombs across both
+    small and large entries, XML entity bombs, path traversal, and macros.
+    """
     try:
         with zipfile.ZipFile(file_path, "r") as zf:
             infos = zf.infolist()
@@ -167,48 +221,109 @@ def _validate_ooxml_zip_safety(file_path: Path) -> None:
                     {"entry_count": len(infos), "max_entries": MAX_DOCX_ENTRY_COUNT},
                 )
 
-            total_uncompressed = 0
-            names: set[str] = set()
+            actual_total_uncompressed = 0
+            declared_total_uncompressed = 0
+            names_lower: set[str] = set()
+
             for info in infos:
                 normalized_entry = info.filename.replace("\\", "/")
-                if normalized_entry.startswith("/") or ".." in normalized_entry.split("/"):
+                if (
+                    normalized_entry.startswith("/")
+                    or ":" in normalized_entry
+                    or ".." in normalized_entry.split("/")
+                ):
                     raise DocumentValidationError(
                         422,
                         "CORRUPTED_OR_UNSAFE_DOCUMENT",
-                        "DOCX archive contains unsafe relative path entries.",
+                        "DOCX archive contains unsafe relative or absolute path entries.",
                     )
 
-                if info.file_size < 0:
+                if info.flag_bits & 0x1:
+                    raise DocumentValidationError(
+                        422,
+                        "ENCRYPTED_DOCUMENT_UNSUPPORTED",
+                        "Password-protected or encrypted DOCX archives are not supported.",
+                    )
+
+                if info.file_size < 0 or info.compress_size < 0:
                     raise DocumentValidationError(422, "CORRUPTED_DOCUMENT", "DOCX archive entry size is invalid.")
 
-                total_uncompressed += info.file_size
-                if total_uncompressed > MAX_DOCX_UNCOMPRESSED_BYTES:
+                declared_total_uncompressed += info.file_size
+                if declared_total_uncompressed > MAX_DOCX_UNCOMPRESSED_BYTES:
                     raise DocumentValidationError(
                         422,
                         "ZIP_BOMB_DETECTED",
                         "DOCX uncompressed content exceeds the 25 MB safety limit.",
-                        {"uncompressed_bytes": total_uncompressed},
+                        {"uncompressed_bytes": declared_total_uncompressed},
                     )
 
-                if info.compress_size > 0 and info.file_size > 1_000_000:
-                    ratio = info.file_size / info.compress_size
-                    if ratio > MAX_DOCX_COMPRESSION_RATIO:
+                names_lower.add(normalized_entry.lower())
+
+                is_xml_like = normalized_entry.lower().endswith((".xml", ".rels"))
+                entry_actual = 0
+                prev_tail = b""
+
+                try:
+                    with zf.open(info, "r") as entry_fh:
+                        while True:
+                            chunk = entry_fh.read(_STREAM_READ_CHUNK_BYTES)
+                            if not chunk:
+                                break
+                            entry_actual += len(chunk)
+                            actual_total_uncompressed += len(chunk)
+
+                            if (
+                                entry_actual > MAX_DOCX_SINGLE_ENTRY_BYTES
+                                or actual_total_uncompressed > MAX_DOCX_UNCOMPRESSED_BYTES
+                            ):
+                                raise DocumentValidationError(
+                                    422,
+                                    "ZIP_BOMB_DETECTED",
+                                    "DOCX actual decompressed stream exceeds safe size limits.",
+                                    {"uncompressed_bytes": actual_total_uncompressed},
+                                )
+
+                            if is_xml_like:
+                                window = (prev_tail + chunk).upper()
+                                if b"<!ENTITY" in window or b"<!DOCTYPE" in window:
+                                    raise DocumentValidationError(
+                                        422,
+                                        "CORRUPTED_OR_UNSAFE_DOCUMENT",
+                                        "DOCX XML contains unsafe DOCTYPE/ENTITY declarations.",
+                                    )
+                                prev_tail = chunk[-32:]
+                except RuntimeError as exc:
+                    raise DocumentValidationError(
+                        422,
+                        "ENCRYPTED_DOCUMENT_UNSUPPORTED",
+                        "DOCX archive entry could not be decrypted cleanly.",
+                    ) from exc
+
+                if entry_actual >= MIN_DOCX_RATIO_CHECK_BYTES:
+                    if info.compress_size == 0 and info.compress_type != zipfile.ZIP_STORED:
                         raise DocumentValidationError(
                             422,
                             "ZIP_BOMB_DETECTED",
-                            "DOCX compression ratio exceeds safe decompression thresholds.",
+                            "DOCX archive entry contains inconsistent compressed size headers.",
                         )
+                    if info.compress_size > 0:
+                        actual_ratio = entry_actual / info.compress_size
+                        if actual_ratio > MAX_DOCX_COMPRESSION_RATIO:
+                            raise DocumentValidationError(
+                                422,
+                                "ZIP_BOMB_DETECTED",
+                                "DOCX compression ratio exceeds safe decompression thresholds.",
+                                {"compression_ratio": round(actual_ratio, 1)},
+                            )
 
-                names.add(normalized_entry)
-
-            if "word/document.xml" not in names:
+            if "word/document.xml" not in names_lower:
                 raise DocumentValidationError(
                     415,
                     "INVALID_OOXML_DOCUMENT",
                     "Archive is not a valid Word DOCX document (word/document.xml missing).",
                 )
 
-            if "word/vbaProject.bin" in names:
+            if any(name.endswith("vbaproject.bin") for name in names_lower):
                 raise DocumentValidationError(
                     415,
                     "MACRO_ENABLED_DOCUMENT_UNSUPPORTED",

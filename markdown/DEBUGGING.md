@@ -23,5 +23,5 @@
 
 - **Neon Connection Drop After 5-Minute Inactivity (`psycopg.OperationalError` / SSL closed):** Confirm SQLAlchemy engine enables `pool_pre_ping=True` and `pool_recycle=240` so pooled connections refresh seamlessly when Neon wakes from scale-to-zero.
 - **Render 512 MB OOM Crash:** Verify Gunicorn uses `--workers 1 --threads 4 --worker-class gthread --preload` and `en_core_web_sm` (never `md`/`lg` or neural transformer weights).
-- **Render 15-Minute Sleep Cold Start (`~50–60s`):** Confirm frontend `services/api.ts` pings `GET /api/health` on studio/builder entry and shows non-blocking warm-up UI with retry rather than timing out in 5 seconds.
+- **Render 15-Minute Sleep Cold Start (`~50–60s`):** Confirm frontend `services/apiClient.ts` pings `GET /api/health` on studio/builder entry and shows calm status UI without silent blocking.
 - **CORS Preflight Error on `X-Workspace-Token` or PDF Filename:** Confirm `Flask-CORS` lists `X-Workspace-Token` in `allow_headers` and `Content-Disposition` in `expose_headers`.

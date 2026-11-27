@@ -46,9 +46,12 @@ All parsing, NLP segmentation, skill matching, quality scoring, ATS estimation, 
 Both **Module A (Resume Builder)** and **Module B (PDF/DOCX Upload)** normalize into one internal `StructuredResumeDocument` payload, allowing students to iterate in the Builder and immediately run full analysis without re-exporting and re-uploading files.
 
 ### 4. Anonymous Privacy Scoping (`X-Workspace-Token`)
-- Browser generates a 128-bit UUIDv4 token stored in `localStorage` and sent via `X-Workspace-Token`.
-- Every workspace query and cascade delete enforces `WHERE workspace_token = :token`.
+- Browser never invents or self-signs workspace tokens (`ADR-003`). Instead, the client calls `POST /api/workspaces/session`, and Flask issues a 256-bit CSPRNG opaque token (`secrets.token_urlsafe(32)`), persists **only its SHA-256 `token_hash`** in `workspaces` (`WORKSPACE_TTL_DAYS=30`), and returns the raw token once to `localStorage`.
+- Every private query (`resumes`, `resume_versions`, `job_descriptions`, `analyses`) validates the active non-expired token hash and enforces strict `resource.workspace_id == active_workspace.id` ownership (`404` on foreign access; `403` on sample mutation).
 - Pre-seeded **Synthetic Demo Samples** (`is_sample = True`) allow evaluators to test in 1 click without touching any real user's data.
+- Expired workspaces are pruned opportunistically on session creation and via `flask --app run.py purge-expired-workspaces`, cascade-deleting all child data.
+
+*(Note: Core backend modules currently implemented cover Phases 4–5: `app/api/`, `app/services/`, `app/models/`, `app/parsers/`, and standalone `app/nlp/skill_matcher.py`. `app/scoring/`, `app/reports/`, `spaCy`, and `ReportLab` arrive in Phases 6–10.)*
 
 ---
 

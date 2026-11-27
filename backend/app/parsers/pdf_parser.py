@@ -118,11 +118,13 @@ def parse_pdf_document(file_path: Path) -> ParsedDocumentResult:
 
         page_chunks: list[str] = []
         total_images = 0
+        total_drawings = 0
         any_multi_column = False
 
         for page in doc:
             images = page.get_images(full=True)
             total_images += len(images)
+            total_drawings += len(page.get_drawings())
             blocks = page.get_text("blocks")
             ordered_texts, is_multi_col = _detect_and_order_page_blocks(
                 blocks, page_width=float(page.rect.width or 612.0)
@@ -137,14 +139,15 @@ def parse_pdf_document(file_path: Path) -> ParsedDocumentResult:
     normalized = normalize_extracted_text("\n\n".join(page_chunks))
     alnum_chars = sum(1 for ch in normalized if ch.isalnum())
 
-    if alnum_chars < 60 and total_images > 0:
+    if alnum_chars < 60 and (total_images > 0 or total_drawings >= 15):
         raise DocumentValidationError(
             422,
             "SCANNED_PDF_DETECTED",
-            "This PDF appears to be a scanned or image-only document with no selectable text layer. Please export a text-based PDF or upload a DOCX file.",
+            "This PDF appears to be a scanned image or outlined vector document with no selectable text layer (server-side OCR is not used). Export a text-selectable PDF or upload a DOCX file.",
             {
                 "page_count": page_count,
                 "image_count": total_images,
+                "vector_drawings": total_drawings,
                 "extracted_chars": alnum_chars,
             },
         )

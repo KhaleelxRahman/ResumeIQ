@@ -198,8 +198,10 @@ export function ResumeDropzone({ disabled = false, onUploaded }: Props) {
           ref={inputRef}
           id={inputId}
           type="file"
+          tabIndex={-1}
+          aria-hidden="true"
           accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-          className="sr-only"
+          className="hidden"
           onChange={(e) => {
             const chosen = e.target.files?.[0];
             if (chosen) void processFile(chosen);

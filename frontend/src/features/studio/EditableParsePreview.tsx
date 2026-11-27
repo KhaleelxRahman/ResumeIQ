@@ -9,6 +9,7 @@ import {
   Save,
   Trash2,
 } from 'lucide-react';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { deleteResume, updateParsedVersion } from '../../services/apiClient';
 import type { EditableSectionInput, ResumeDetail } from '../../types/api';
 
@@ -45,6 +46,7 @@ export function EditableParsePreview({ resume, onUpdated, onDeleted }: Props) {
   const [showRawText, setShowRawText] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [feedback, setFeedback] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
 
   useEffect(() => {
@@ -57,6 +59,7 @@ export function EditableParsePreview({ resume, onUpdated, onDeleted }: Props) {
         content_text: s.content_text,
       })),
     );
+    setConfirmDeleteOpen(false);
     setFeedback(null);
   }, [resume]);
 
@@ -89,12 +92,15 @@ export function EditableParsePreview({ resume, onUpdated, onDeleted }: Props) {
     setFeedback(null);
     try {
       await deleteResume(resume.id);
+      setConfirmDeleteOpen(false);
       onDeleted(resume.id);
     } catch (err) {
       setFeedback({
         kind: 'err',
         text: err instanceof Error ? err.message : 'Failed to delete resume.',
       });
+      setConfirmDeleteOpen(false);
+    } finally {
       setDeleting(false);
     }
   };
@@ -149,7 +155,7 @@ export function EditableParsePreview({ resume, onUpdated, onDeleted }: Props) {
             <button
               type="button"
               disabled={deleting}
-              onClick={() => void handleDelete()}
+              onClick={() => setConfirmDeleteOpen(true)}
               className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-[var(--status-danger)]/40 bg-[var(--bg-elevated)] px-3 text-xs font-medium text-[#fda4af] hover:bg-[var(--status-danger)]/10 disabled:opacity-50"
             >
               <Trash2 size={14} aria-hidden="true" />
@@ -192,8 +198,21 @@ export function EditableParsePreview({ resume, onUpdated, onDeleted }: Props) {
           <ul className="space-y-1 text-xs text-[var(--text-secondary)]">
             <li>Email: {resume.version.masked_contact.email ?? 'Not detected'}</li>
             <li>Phone: {resume.version.masked_contact.phone ?? 'Not detected'}</li>
-            <li>GitHub: {resume.version.contact_flags.has_github ? 'Detected' : 'Not detected'}</li>
-            <li>LinkedIn: {resume.version.contact_flags.has_linkedin ? 'Detected' : 'Not detected'}</li>
+            <li>
+              GitHub:{' '}
+              {resume.version.contact_flags.has_github
+                ? (resume.version.masked_contact.github ?? 'Detected')
+                : 'Not detected'}
+            </li>
+            <li>
+              LinkedIn:{' '}
+              {resume.version.contact_flags.has_linkedin
+                ? (resume.version.masked_contact.linkedin ?? 'Detected')
+                : 'Not detected'}
+            </li>
+            {(resume.version.contact_flags.has_portfolio || resume.version.masked_contact.portfolio) && (
+              <li>Portfolio: {resume.version.masked_contact.portfolio ?? 'Detected'}</li>
+            )}
           </ul>
         </div>
         <div>
@@ -381,6 +400,16 @@ export function EditableParsePreview({ resume, onUpdated, onDeleted }: Props) {
           </pre>
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        title="Delete Resume Permanently?"
+        description={`Permanently delete "${resume.title}" and all parsed sections from this workspace? This action cannot be undone.`}
+        confirmLabel="Confirm Delete Resume"
+        busy={deleting}
+        onCancel={() => setConfirmDeleteOpen(false)}
+        onConfirm={handleDelete}
+      />
     </section>
   );
 }

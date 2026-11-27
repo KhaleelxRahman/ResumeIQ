@@ -4,11 +4,11 @@
 
 ## 1. Database Engine Strategy (Neon PostgreSQL + Local SQLite)
 
-- **Production Candidate:** **Neon PostgreSQL** (`DATABASE_URL=postgresql+psycopg://...`) managed with **SQLAlchemy 2.0** and **Alembic** migrations.
+- **Production Candidate (Phase 13 Target):** **Neon PostgreSQL** (`DATABASE_URL=postgresql+psycopg://...`) managed with **SQLAlchemy 2.1** and **Alembic** migrations. *(Compatibility verified locally via PostgreSQL DDL compilation; live Neon connection pending Phase 13.)*
   - **Verified Neon Free-Tier Profile (Nov 2026 — re-verify prior to Phase 13 deploy):** `$0/mo`, `1 GB` Postgres storage per project, `100 CU-hours/mo`, autoscaling up to `2 CU`, **auto-suspend after 5 minutes of inactivity**, `5 GB` egress/project.
   - **Connection Resilience:** Configure SQLAlchemy `create_engine(..., pool_pre_ping=True, pool_recycle=240)`.
-- **Local Development & Isolated Tests:** **SQLite** (`sqlite:///./resumeiq_dev.db` or `:memory:` for `pytest`).
-- **Cross-Dialect Migration Discipline:** Alembic uses `render_as_batch=True` and portable types (`Uuid(as_uuid=True)`, `JSON`, `DateTime(timezone=True)`, `Enum(..., native_enum=False, create_constraint=True)`) so every migration runs identically across SQLite and Neon PostgreSQL.
+- **Local Development & Isolated Tests:** **SQLite** (`sqlite:///./resumeiq_dev.db` or `:memory:` for `pytest`) initialized via `alembic upgrade head` and `flask --app run.py seed-db` (with `flask --app run.py purge-expired-workspaces` available for manual TTL pruning).
+- **Cross-Dialect Migration Discipline:** Alembic uses `render_as_batch=True`, attaches SQLite `PRAGMA foreign_keys=ON` cleanly in `alembic/env.py`, and defines portable types (`Uuid(as_uuid=True)`, `JSON`, `DateTime(timezone=True)`, `Enum(..., native_enum=False, create_constraint=True)`). Initial revision `96cd3747957a` verified via `downgrade base` and `upgrade head`.
 
 *(See [docs/database/er-diagram.md](docs/database/er-diagram.md) for the Mermaid ER diagram.)*
 

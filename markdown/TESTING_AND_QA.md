@@ -16,7 +16,7 @@
 ## 2. Synthetic Test Fixture Policy
 
 - **Zero Real Personal Resumes:** Never use real students' personal resumes in tests or Git.
-- Generate deterministic synthetic fixtures in `backend/tests/fixtures/`:
+- Generate deterministic synthetic fixtures dynamically in `backend/tests/` (`_make_pdf_bytes`, `_make_docx_bytes`, `_make_scanned_image_pdf_bytes` without committing binary PII blobs):
   1. `fresher_web_dev.pdf` & `.docx` (strong projects, zero corporate experience — must score ≥ 80 without experience penalty)
   2. `data_analyst_tables.docx` (skills & education inside Word tables)
   3. `two_column_designer.pdf` (triggers multi-column layout warning)

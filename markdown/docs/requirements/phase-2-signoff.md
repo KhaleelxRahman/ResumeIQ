@@ -16,7 +16,7 @@ Re-verified Pages 1–8 of the attached SkillOrbit AI Capstone PDF against all 5
 
 ## 2. Signed-Off Artifacts
 - **Architecture:** [ARCHITECTURE.md](../../ARCHITECTURE.md) & [system-architecture.md](../architecture/system-architecture.md)
-- **Database & ER Diagram:** [DATABASE.md](../../DATABASE.md) & [er-diagram.md](../database/er-diagram.md) (`9` tables, `ON DELETE CASCADE`, composite indexes)
+- **Database & ER Diagram:** [DATABASE.md](../../DATABASE.md) & [er-diagram.md](../database/er-diagram.md) (`10` tables, `ON DELETE CASCADE`, composite indexes)
 - **Scoring Specification:** [scoring-rubric-spec.md](../database/scoring-rubric-spec.md)
 - **API Contracts:** [API.md](../../API.md) & [openapi-draft.yaml](../../../docs/api/openapi-draft.yaml)
 - **ADRs:** `ADR-001` through `ADR-004` under `markdown/docs/adr/`

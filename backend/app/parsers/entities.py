@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from typing import Iterable
+from urllib.parse import urlparse
 
 from app.nlp.skill_matcher import extract_skills_from_sections
 from app.parsers.pdf_parser import ParseWarning
@@ -9,7 +11,9 @@ from app.parsers.sectioner import SegmentedSection
 
 
 _EMAIL_RE = re.compile(r"\b([A-Za-z0-9._%+-]+)@([A-Za-z0-9.-]+\.[A-Za-z]{2,})\b")
-_PHONE_RE = re.compile(r"(?:\+?\d{1,3}[\s.-]?)?(?:\(?\d{3,5}\)?[\s.-]?)?\d{3,5}[\s.-]?\d{4}\b")
+_PHONE_RE = re.compile(
+    r"(?<!\d)(?:\+\d{1,3}[\s.-]?)?(?:\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}|\d{5}[\s.-]?\d{5}|\d{10})(?!\d)"
+)
 _LINKEDIN_RE = re.compile(r"(?:https?://)?(?:www\.)?linkedin\.com/in/[A-Za-z0-9_-]+/?", re.I)
 _GITHUB_RE = re.compile(r"(?:https?://)?(?:www\.)?github\.com/[A-Za-z0-9_.-]+/?", re.I)
 _URL_RE = re.compile(r"https?://[A-Za-z0-9.-]+\.[A-Za-z]{2,}[^\s|,;]*", re.I)
@@ -36,6 +40,52 @@ def _mask_phone(phone: str) -> str:
     if len(digits) < 6:
         return "***"
     return f"***-***-{''.join(digits[-4:])}"
+
+
+def _mask_handle(value: str) -> str:
+    clean = value.strip()
+    if len(clean) <= 1:
+        return "***"
+    return f"{clean[0]}***"
+
+
+def _mask_linkedin(url: str) -> str:
+    match = re.search(r"linkedin\.com/in/([^/?#\s]+)", url, re.I)
+    slug = match.group(1) if match else ""
+    return f"linkedin.com/in/{_mask_handle(slug)}"
+
+
+def _mask_github(url: str) -> str:
+    match = re.search(r"github\.com/([^/?#\s]+)", url, re.I)
+    username = match.group(1) if match else ""
+    return f"github.com/{_mask_handle(username)}"
+
+
+def _mask_portfolio(url: str) -> str:
+    parsed = urlparse(url if "://" in url else f"https://{url}")
+    host = (parsed.hostname or "").lower().removeprefix("www.")
+    if not host:
+        return "[portfolio redacted]"
+    labels = host.split(".")
+    if len(labels) >= 2:
+        masked_host = ".".join([_mask_handle(lbl) for lbl in labels[:-1]] + [labels[-1]])
+    else:
+        masked_host = _mask_handle(host)
+    has_subpath = bool((parsed.path and parsed.path != "/") or parsed.query)
+    return f"{masked_host}/***" if has_subpath else masked_host
+
+
+def compose_sections_text(sections: Iterable[SegmentedSection]) -> str:
+    """Reconstruct normalized linear text from ordered resume sections."""
+    blocks: list[str] = []
+    for sec in sections:
+        heading = sec.raw_heading.strip()
+        body = sec.content_text.strip()
+        if sec.section_type != "header_contact" and heading and heading.upper() != "HEADER":
+            blocks.append(f"{heading}\n{body}" if body else heading)
+        elif body:
+            blocks.append(body)
+    return "\n\n".join(blocks)
 
 
 def _infer_candidate_label(sections: list[SegmentedSection], raw_text: str) -> str | None:
@@ -114,9 +164,9 @@ def extract_structured_resume_entities(
     masked_contact = {
         "email": _mask_email(email_match.group(0)) if email_match else None,
         "phone": _mask_phone(phone_match.group(0)) if phone_match else None,
-        "linkedin": linkedin_match.group(0) if linkedin_match else None,
-        "github": github_match.group(0) if github_match else None,
-        "portfolio": portfolio_url,
+        "linkedin": _mask_linkedin(linkedin_match.group(0)) if linkedin_match else None,
+        "github": _mask_github(github_match.group(0)) if github_match else None,
+        "portfolio": _mask_portfolio(portfolio_url) if portfolio_url else None,
     }
 
     candidate_label = _infer_candidate_label(sections, raw_text)

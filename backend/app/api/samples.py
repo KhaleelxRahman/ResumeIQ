@@ -78,6 +78,8 @@ def get_sample_detail(sample_id: str):
             "template_slug": version.template_slug,
             "word_count": version.word_count,
             "contact_flags": version.contact_flags_json,
+            "masked_contact": version.masked_contact_json,
+            "skills": list((version.structured_payload_json or {}).get("skills", [])),
             "sections": sections,
         }
     ), 200

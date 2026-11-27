@@ -31,44 +31,46 @@ Every `4xx` / `5xx` Flask error handler returns:
 - `403` Attempted mutation of read-only sample resources
 - `404` Resource not found or owned by a different workspace
 - `413` Upload exceeds `5 MB`
-- `415` Spoofed extension failing PDF/DOCX magic-byte check
-- `422` Empty, corrupted, password-protected, or scanned document
+- `415` Spoofed extension failing binary magic-byte check or invalid OOXML structure
+- `422` Empty, corrupted, password-protected, ZIP-bomb/XXE, or scanned/outlined-vector PDF document
+- `429` Rate limit exceeded (`RATE_LIMIT_EXCEEDED` w/ `Retry-After`) or workspace resume quota reached (`WORKSPACE_QUOTA_EXCEEDED`)
 - `500` Sanitized internal error (zero stack traces or PII)
 
 ---
 
 ## 3. Endpoint Inventory
 
-### Health, Sessions & Demo Samples
-| Method & Path | Auth Scope | Purpose |
+### Health, Sessions & Demo Samples *(Implemented — Phase 4)*
+| Method & Path | Auth Scope | Purpose | Status |
+|---|---|---|---|
+| `GET /api/health` | Public | Readiness check: `{ status, db, nlp_ready, hf_mode, version, engine_version }`. | **IMPLEMENTED** |
+| `POST /api/workspaces/session` | Public *(rate-limited)* | Prunes expired sessions cleanly & generates server-issued workspace token (`201 Created`). | **IMPLEMENTED** |
+| `GET /api/workspaces/current` | Valid `X-Workspace-Token` | Validates current session metadata & expiration (`200 OK`). | **IMPLEMENTED** |
+| `DELETE /api/workspaces/current` | Valid `X-Workspace-Token` *(rate-limited)* | Permanently purges workspace + all cascaded data (`204 No Content`). | **IMPLEMENTED** |
+| `GET /api/samples` | Public | Lists synthetic read-only demo resumes (`is_sample=true`). | **IMPLEMENTED** |
+| `GET /api/samples/:sampleId` | Public | Returns read-only sample sections, detected canonical `skills`, `contact_flags`, and `masked_contact`. | **IMPLEMENTED** |
+
+### Resume Upload, Parsing & Builder *(Phase 5–6)*
+| Method & Path | Purpose | Status |
 |---|---|---|
-| `GET /api/health` | Public | Readiness check: `{ status, db, nlp_ready, hf_mode, version }`. |
-| `POST /api/workspaces/session` | Public | Generates server-issued workspace token (`201 Created`). |
-| `GET /api/workspaces/current` | Valid `X-Workspace-Token` | Validates current session metadata & expiration (`200 OK`). |
-| `DELETE /api/workspaces/current` | Valid `X-Workspace-Token` | Permanently purges workspace + all cascaded data (`204 No Content`). |
-| `GET /api/samples` | Public | Lists synthetic read-only demo resumes (`is_sample=true`). |
+| `POST /api/resumes/upload` | Rate/quota checked; validate `<= 5 MB` file (+ multipart overhead headroom), binary sniffing & bounded OOXML ZIP-bomb/XXE scan, parse via temp dir (`finally:` deleted), persist extracted metadata. | **IMPLEMENTED (Phase 5)** |
+| `PATCH /api/resumes/:id/versions/:versionId` | Update reviewed parsed sections while preserving immutable `raw_text`; forbids client `structured_payload` overrides (`extra="forbid"`) and recomputes `skills`, `word_count`, and contact flags on server. | **IMPLEMENTED (Phase 5)** |
+| `GET /api/resumes` | List workspace resumes (`?include_samples=true`). | **IMPLEMENTED (Phase 5)** |
+| `GET /api/resumes/:id` | Get resume details, extracted skills, masked contact, and sections (`404` across workspaces). | **IMPLEMENTED (Phase 5)** |
+| `DELETE /api/resumes/:id` | Cascade-delete owned resume + versions + analyses (`403` on samples). | **IMPLEMENTED (Phase 5)** |
+| `POST /api/resumes/builder` | Persist structured resume (`swiss-technical` or `academic-editorial`) as `v1`. | **PLANNED (Phase 6)** |
+| `POST /api/resumes/:id/versions` | Save revised resume snapshot (`vN`). | **PLANNED (Phase 6)** |
+| `GET /api/resumes/:id/versions/:versionId/export?format=pdf` | Stream ReportLab resume PDF. *(DOCX deferred.)* | **PLANNED (Phase 6)** |
 
-### Resume Upload, Parsing & Builder (`Phase 5–6`)
-| Method & Path | Purpose |
-|---|---|
-| `POST /api/resumes/upload` | Validate `<= 5 MB` + magic bytes, parse via temp dir (`finally:` deleted), persist extracted metadata. |
-| `POST /api/resumes/builder` | Persist structured resume (`swiss-technical` or `academic-editorial`) as `v1`. |
-| `POST /api/resumes/:id/versions` | Save revised resume snapshot (`vN`). |
-| `PATCH /api/resumes/:id/versions/:versionId` | Update edited parse preview sections/fields. |
-| `GET /api/resumes` | List workspace resumes (`?include_samples=true`). |
-| `GET /api/resumes/:id` | Get resume details & versions. |
-| `GET /api/resumes/:id/versions/:versionId/export?format=pdf` | Stream ReportLab resume PDF. *(DOCX deferred.)* |
-| `DELETE /api/resumes/:id` | Cascade-delete owned resume + versions + analyses. |
-
-### Roles, Analysis, Feedback & Reports (`Phase 4, 7–10`)
-| Method & Path | Purpose |
-|---|---|
-| `GET /api/job-roles` | List the 4 mandatory SkillOrbit roles with skill counts & metadata. |
-| `GET /api/job-roles/:slug` | Full curated `mandatory` & `preferred` taxonomy for a role. |
-| `POST /api/job-descriptions/extract` | Deterministic extraction preview for pasted custom JD. |
-| `POST /api/analyses` | Execute deterministic Quality (`0–100`), ATS Estimate (`0–100`), Skill Gap & Smart Feedback (`201`). |
-| `GET /api/analyses/:id` | Fetch complete analysis breakdown + evidence snippets. |
-| `GET /api/analyses/:id/feedback` | Filtered recommendations (`?priority=high`). |
-| `GET /api/analyses/:id/report` | Export ReportLab PDF audit report. |
-| `DELETE /api/analyses/:id` | Delete specific analysis snapshot. |
-| `GET /api/history` | Paginated workspace analysis runs (`?limit=20&offset=0`). |
+### Roles, Analysis, Feedback & Reports *(Phase 4, 7–10)*
+| Method & Path | Purpose | Status |
+|---|---|---|
+| `GET /api/job-roles` | List the 4 mandatory SkillOrbit roles with skill counts & metadata. | **IMPLEMENTED (Phase 4)** |
+| `GET /api/job-roles/:slug` | Full curated `mandatory` & `preferred` taxonomy for a role. | **IMPLEMENTED (Phase 4)** |
+| `POST /api/job-descriptions/extract` | Deterministic extraction preview for pasted custom JD. | **PLANNED (Phase 8)** |
+| `POST /api/analyses` | Execute deterministic Quality (`0–100`), ATS Estimate (`0–100`), Skill Gap & Smart Feedback (`201`). | **PLANNED (Phase 7–8)** |
+| `GET /api/analyses/:id` | Fetch complete analysis breakdown + evidence snippets. | **PLANNED (Phase 7–10)** |
+| `GET /api/analyses/:id/feedback` | Filtered recommendations (`?priority=high`). | **PLANNED (Phase 9)** |
+| `GET /api/analyses/:id/report` | Export ReportLab PDF audit report. | **PLANNED (Phase 10)** |
+| `DELETE /api/analyses/:id` | Delete specific analysis snapshot. | **PLANNED (Phase 10)** |
+| `GET /api/history` | Paginated workspace analysis runs (`?limit=20&offset=0`). | **PLANNED (Phase 10)** |

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AlertCircle, CheckCircle2, FileText, RefreshCw, Trash2 } from 'lucide-react';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { EditableParsePreview } from '../features/studio/EditableParsePreview';
 import { ResumeDropzone } from '../features/studio/ResumeDropzone';
 import {
@@ -27,6 +28,7 @@ export function AnalyzePage() {
   const [statusMessage, setStatusMessage] = useState<string>('Connecting to Flask parsing engine...');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [confirmPurgeOpen, setConfirmPurgeOpen] = useState(false);
 
   const loadStudioState = async () => {
     setBusy(true);
@@ -118,6 +120,7 @@ export function AnalyzePage() {
       setErrorMessage(err instanceof Error ? err.message : 'Failed to purge workspace.');
     } finally {
       setBusy(false);
+      setConfirmPurgeOpen(false);
     }
   };
 
@@ -162,7 +165,7 @@ export function AnalyzePage() {
           <button
             type="button"
             disabled={busy || !workspace}
-            onClick={() => void handlePurgeWorkspace()}
+            onClick={() => setConfirmPurgeOpen(true)}
             className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-[var(--status-danger)]/40 bg-[var(--bg-elevated)] px-3 text-xs font-medium text-[#fda4af] hover:bg-[var(--status-danger)]/10 disabled:opacity-50"
           >
             <Trash2 size={14} aria-hidden="true" />
@@ -248,6 +251,16 @@ export function AnalyzePage() {
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmPurgeOpen}
+        title="Purge Entire Workspace Session?"
+        description="This permanently deletes all uploaded resumes, edited sections, and saved analyses tied to your active workspace token, and resets your session."
+        confirmLabel="Confirm Purge Workspace"
+        busy={busy}
+        onCancel={() => setConfirmPurgeOpen(false)}
+        onConfirm={handlePurgeWorkspace}
+      />
     </div>
   );
 }

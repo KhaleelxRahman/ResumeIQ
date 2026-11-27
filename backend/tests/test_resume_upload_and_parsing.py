@@ -151,6 +151,10 @@ def test_pdf_upload_extraction_preserves_evidence_and_cleans_temp(client):
     assert ver["contact_flags"]["has_github"] is True
     assert ver["contact_flags"]["has_linkedin"] is True
     assert ver["masked_contact"]["email"] == "r***@example.edu"
+    assert ver["masked_contact"]["phone"] == "***-***-2233"
+    assert ver["masked_contact"]["github"] == "github.com/r***"
+    assert ver["masked_contact"]["linkedin"] == "linkedin.com/in/r***"
+    assert "rohan-s" not in str(ver["masked_contact"])
     assert ver["extraction_confidence"] >= 0.85
 
     sec_types = {s["section_type"] for s in ver["sections"]}
@@ -460,3 +464,257 @@ def test_editable_parse_preview_ownership_and_cascade_deletion(client, db_sessio
     assert db_session.scalar(select(Resume).where(Resume.id == resume_uuid)) is None
     assert db_session.scalar(select(ResumeVersion).where(ResumeVersion.id == version_uuid)) is None
     assert db_session.scalars(select(ResumeSection).where(ResumeSection.resume_version_id == version_uuid)).all() == []
+
+
+def test_patch_blocks_structured_payload_override_and_recalculates_derived_fields(client):
+    token = _issue_token(client)
+    pdf_bytes = _make_pdf_bytes(
+        [
+            "Kiran Candidate",
+            "kiran@example.edu | github.com/kiran-dev",
+            "SKILLS",
+            "Python, SQL",
+            "PROJECTS",
+            "Budget CLI - Simple budget tracker in Python.",
+        ]
+    )
+    created = client.post(
+        "/api/resumes/upload",
+        headers={"X-Workspace-Token": token},
+        data={"file": (io.BytesIO(pdf_bytes), "kiran.pdf")},
+        content_type="multipart/form-data",
+    ).get_json()
+    resume_id = created["id"]
+    version_id = created["version"]["version_id"]
+    original_raw_text = created["version"]["raw_text"]
+    original_word_count = created["version"]["word_count"]
+
+    # 1. Arbitrary client-supplied structured_payload override must be rejected with 400
+    forged_patch = client.patch(
+        f"/api/resumes/{resume_id}/versions/{version_id}",
+        headers={"X-Workspace-Token": token},
+        json={
+            "title": "Override Attempt",
+            "structured_payload": {"skills": ["InventedSkill", "Kubernetes"], "page_count": 99},
+        },
+    )
+    assert forged_patch.status_code == 400
+    assert forged_patch.get_json()["error"]["code"] == "VALIDATION_ERROR"
+
+    # 2. Editing sections recalculates skills, word_count, contact_flags, and masked_contact while keeping raw_text intact
+    edited_resp = client.patch(
+        f"/api/resumes/{resume_id}/versions/{version_id}",
+        headers={"X-Workspace-Token": token},
+        json={
+            "sections": [
+                {
+                    "section_type": "header_contact",
+                    "raw_heading": "HEADER",
+                    "content_text": (
+                        "Kiran Candidate\n"
+                        "kiran.updated@example.edu | +91-9876543210 | "
+                        "linkedin.com/in/kiran-secret-profile | github.com/kiran-secret-git | "
+                        "https://portfolio.kiran-sharma.dev/projects"
+                    ),
+                },
+                {
+                    "section_type": "skills",
+                    "raw_heading": "TECHNICAL SKILLS",
+                    "content_text": "Python, SQL, Docker, Kubernetes, C++, Go",
+                },
+                {
+                    "section_type": "projects",
+                    "raw_heading": "PROJECTS",
+                    "content_text": "Containerized API - Deployed Docker microservices using Flask and PostgreSQL.",
+                },
+            ]
+        },
+    )
+    assert edited_resp.status_code == 200
+    ver = edited_resp.get_json()["version"]
+
+    assert ver["raw_text"] == original_raw_text
+    assert ver["word_count"] > original_word_count
+    assert ver["structured_payload"]["user_edited"] is True
+    assert ver["structured_payload"]["page_count"] == 1
+    assert {"Python", "SQL", "Docker", "Kubernetes", "C++", "Go", "Flask", "PostgreSQL"}.issubset(
+        set(ver["structured_payload"]["skills"])
+    )
+    assert ver["contact_flags"] == {
+        "has_email": True,
+        "has_phone": True,
+        "has_linkedin": True,
+        "has_github": True,
+        "has_portfolio": True,
+    }
+    assert ver["masked_contact"]["email"] == "k***@example.edu"
+    assert ver["masked_contact"]["phone"] == "***-***-3210"
+    assert ver["masked_contact"]["linkedin"] == "linkedin.com/in/k***"
+    assert ver["masked_contact"]["github"] == "github.com/k***"
+    assert ver["masked_contact"]["portfolio"] == "p***.k***.dev/***"
+    masked_serialized = str(ver["masked_contact"])
+    assert "kiran-secret-profile" not in masked_serialized
+    assert "kiran-secret-git" not in masked_serialized
+    assert "kiran-sharma" not in masked_serialized
+    assert "/projects" not in masked_serialized
+
+
+def test_exact_5mb_multipart_upload_succeeds_and_5mb_plus_one_fails(client):
+    token = _issue_token(client)
+    base_pdf = _make_pdf_bytes(
+        [
+            "Priya ExactLimit",
+            "priya@example.edu | github.com/priya-p",
+            "EDUCATION",
+            "B.Tech CS, Example Univ (2023 - 2027)",
+            "SKILLS",
+            "Python, SQL, Flask, Docker",
+        ]
+    )
+    exact_5mb = 5 * 1024 * 1024
+    pad_needed = exact_5mb - len(base_pdf)
+    assert pad_needed > 20
+    # Valid trailing PDF comment padding keeps PDF valid at exactly 5,242,880 bytes while HTTP multipart body > 5 MiB.
+    padded_exact_5mb = base_pdf + b"\n%" + (b"a" * (pad_needed - 2))
+    assert len(padded_exact_5mb) == exact_5mb
+
+    ok_resp = client.post(
+        "/api/resumes/upload",
+        headers={"X-Workspace-Token": token},
+        data={"file": (io.BytesIO(padded_exact_5mb), "exact_5mb.pdf"), "title": "Boundary 5MB"},
+        content_type="multipart/form-data",
+    )
+    assert ok_resp.status_code == 201
+    assert ok_resp.get_json()["version"]["file_size_bytes"] == exact_5mb
+
+    too_big = padded_exact_5mb + b"x"
+    over_resp = client.post(
+        "/api/resumes/upload",
+        headers={"X-Workspace-Token": token},
+        data={"file": (io.BytesIO(too_big), "over_5mb.pdf")},
+        content_type="multipart/form-data",
+    )
+    assert over_resp.status_code == 413
+    assert over_resp.get_json()["error"]["code"] == "FILE_TOO_LARGE"
+
+
+def test_small_ratio_zip_bomb_xxe_disguised_mime_and_vector_pdf(client):
+    token = _issue_token(client)
+
+    # 1. Small (< 1 MB) high-ratio ZIP bomb inside .docx (e.g. 600 KB zeros -> ~600 bytes compressed)
+    small_bomb = io.BytesIO()
+    with zipfile.ZipFile(small_bomb, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("word/document.xml", "A" * (600 * 1024))
+    r_small_bomb = client.post(
+        "/api/resumes/upload",
+        headers={"X-Workspace-Token": token},
+        data={"file": (io.BytesIO(small_bomb.getvalue()), "small_bomb.docx")},
+        content_type="multipart/form-data",
+    )
+    assert r_small_bomb.status_code == 422
+    assert r_small_bomb.get_json()["error"]["code"] == "ZIP_BOMB_DETECTED"
+
+    # 2. Multi-entry compressed bomb (30 x 900 KB entries = ~27 MB > 25 MB cumulative ceiling)
+    multi_bomb = io.BytesIO()
+    with zipfile.ZipFile(multi_bomb, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("word/document.xml", "<w:document/>")
+        for i in range(30):
+            zf.writestr(f"word/part_{i}.bin", b"X" * (900 * 1024))
+    r_multi = client.post(
+        "/api/resumes/upload",
+        headers={"X-Workspace-Token": token},
+        data={"file": (io.BytesIO(multi_bomb.getvalue()), "multi_bomb.docx")},
+        content_type="multipart/form-data",
+    )
+    assert r_multi.status_code == 422
+    assert r_multi.get_json()["error"]["code"] == "ZIP_BOMB_DETECTED"
+
+    # 3. Spoofed central-directory/local-header size rejected cleanly before python-docx
+    import struct
+    raw_zip = bytearray(small_bomb.getvalue())
+    lfh_idx = raw_zip.find(b"PK\x03\x04")
+    cd_idx = raw_zip.find(b"PK\x01\x02")
+    assert lfh_idx != -1 and cd_idx != -1
+    struct.pack_into("<I", raw_zip, lfh_idx + 22, 64)
+    struct.pack_into("<I", raw_zip, cd_idx + 24, 64)
+    r_spoof_hdr = client.post(
+        "/api/resumes/upload",
+        headers={"X-Workspace-Token": token},
+        data={"file": (io.BytesIO(bytes(raw_zip)), "spoof_cd.docx")},
+        content_type="multipart/form-data",
+    )
+    assert r_spoof_hdr.status_code == 422
+    assert r_spoof_hdr.get_json()["error"]["code"] in {"CORRUPTED_DOCUMENT", "ZIP_BOMB_DETECTED"}
+
+    # 3. XML DOCTYPE / ENTITY expansion bomb inside word/document.xml
+    xxe_docx = io.BytesIO()
+    with zipfile.ZipFile(xxe_docx, "w") as zf:
+        zf.writestr("word/document.xml", '<!DOCTYPE lolz [<!ENTITY lol "lol">]><w:document/>')
+    r_xxe = client.post(
+        "/api/resumes/upload",
+        headers={"X-Workspace-Token": token},
+        data={"file": (io.BytesIO(xxe_docx.getvalue()), "xxe.docx")},
+        content_type="multipart/form-data",
+    )
+    assert r_xxe.status_code == 422
+    assert r_xxe.get_json()["error"]["code"] == "CORRUPTED_OR_UNSAFE_DOCUMENT"
+
+    # 4. Disguised DOCX renamed to .pdf even with client Content-Type: application/pdf
+    from werkzeug.datastructures import FileStorage
+    real_docx = _make_docx_bytes(with_table=False, header_contact=False)
+    r_docx_as_pdf = client.post(
+        "/api/resumes/upload",
+        headers={"X-Workspace-Token": token},
+        data={"file": (io.BytesIO(real_docx), "fake.pdf", "application/pdf")},
+        content_type="multipart/form-data",
+    )
+    assert r_docx_as_pdf.status_code == 415
+    assert r_docx_as_pdf.get_json()["error"]["code"] == "INVALID_FILE_SIGNATURE"
+
+    # 5. Disguised PNG renamed to .pdf even with Content-Type: application/pdf
+    png_bytes = b"\x89PNG\r\n\x1a\n" + (b"\x00" * 64)
+    r_png_as_pdf = client.post(
+        "/api/resumes/upload",
+        headers={"X-Workspace-Token": token},
+        data={"file": (io.BytesIO(png_bytes), "photo.pdf", "application/pdf")},
+        content_type="multipart/form-data",
+    )
+    assert r_png_as_pdf.status_code == 415
+    assert r_png_as_pdf.get_json()["error"]["code"] == "INVALID_FILE_SIGNATURE"
+
+    # 6. Valid PDF sent with application/octet-stream MIME succeeds via binary inspection
+    valid_pdf = _make_pdf_bytes(
+        [
+            "Stream Octet",
+            "octet@example.edu",
+            "EDUCATION",
+            "B.Tech CS (2023 - 2027)",
+            "SKILLS",
+            "Python, SQL, Docker, Git",
+        ]
+    )
+    r_octet = client.post(
+        "/api/resumes/upload",
+        headers={"X-Workspace-Token": token},
+        data={"file": (io.BytesIO(valid_pdf), "octet.pdf", "application/octet-stream")},
+        content_type="multipart/form-data",
+    )
+    assert r_octet.status_code == 201
+
+    # 7. Vector-outlined PDF (drawings >= 15, images == 0, chars == 0) emits SCANNED_PDF_DETECTED
+    vec_doc = fitz.open()
+    vec_page = vec_doc.new_page()
+    for i in range(20):
+        vec_page.draw_rect(fitz.Rect(40, 40 + i * 25, 240, 55 + i * 25))
+    vec_bytes = vec_doc.tobytes()
+    vec_doc.close()
+
+    r_vec = client.post(
+        "/api/resumes/upload",
+        headers={"X-Workspace-Token": token},
+        data={"file": (io.BytesIO(vec_bytes), "outlined_canva.pdf")},
+        content_type="multipart/form-data",
+    )
+    assert r_vec.status_code == 422
+    assert r_vec.get_json()["error"]["code"] == "SCANNED_PDF_DETECTED"
+    assert r_vec.get_json()["error"]["details"]["vector_drawings"] >= 15

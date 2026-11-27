@@ -10,6 +10,8 @@ from flask_cors import CORS
 from sqlalchemy import inspect
 
 from app.api import register_api_blueprints
+from app.api.auth_workspace import purge_expired_workspaces
+from app.api.rate_limit import SlidingWindowRateLimiter
 from app.config import AppConfig
 from app.db.seed import seed_core_data
 from app.extensions import Base, build_engine, create_session_factory, session_scope
@@ -24,11 +26,14 @@ def create_app(config_override: dict[str, Any] | None = None) -> Flask:
         for key, value in config_override.items():
             if hasattr(cfg, key):
                 setattr(cfg, key, value)
+        if "MAX_UPLOAD_BYTES" in config_override and "MAX_CONTENT_LENGTH" not in config_override:
+            cfg.MAX_CONTENT_LENGTH = cfg.MAX_UPLOAD_BYTES + cfg.MULTIPART_OVERHEAD_BYTES
 
     app = Flask(__name__)
     app.config["APP_CONFIG"] = cfg
     app.config["TESTING"] = cfg.TESTING
     app.config["MAX_CONTENT_LENGTH"] = cfg.MAX_CONTENT_LENGTH
+    app.config["RATE_LIMITER"] = SlidingWindowRateLimiter()
 
     logging.basicConfig(
         level=logging.INFO if not cfg.TESTING else logging.WARNING,
@@ -79,6 +84,13 @@ def create_app(config_override: dict[str, Any] | None = None) -> Flask:
         with session_scope(session_factory) as session:
             counts = seed_core_data(session)
         click.echo(f"Seed complete: {counts}")
+
+    @app.cli.command("purge-expired-workspaces")
+    def purge_expired_workspaces_command() -> None:
+        """Delete expired anonymous workspaces and cascade-delete owned records."""
+        with session_scope(session_factory) as session:
+            removed = purge_expired_workspaces(session)
+        click.echo(f"Expired workspaces purged: {removed}")
 
     register_api_blueprints(app)
     return app

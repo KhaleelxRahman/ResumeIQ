@@ -27,14 +27,15 @@ def _iter_body_items(doc: DocxDocument):
 
 def _extract_table_lines(table: Table) -> list[str]:
     lines: list[str] = []
-    seen_tc_ids: set[int] = set()
+    # Retain CT_Tc proxy references in the set directly so lxml wrapper addresses cannot be recycled mid-loop.
+    seen_tcs: set[object] = set()
     for row in table.rows:
         row_cells: list[str] = []
         for cell in row.cells:
-            tc_id = id(cell._tc)
-            if tc_id in seen_tc_ids:
+            tc = cell._tc
+            if tc in seen_tcs:
                 continue
-            seen_tc_ids.add(tc_id)
+            seen_tcs.add(tc)
             cell_text = " ".join(p.text.strip() for p in cell.paragraphs if p.text.strip())
             if cell_text:
                 row_cells.append(cell_text)

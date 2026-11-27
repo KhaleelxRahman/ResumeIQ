@@ -4,6 +4,24 @@ All notable changes to **ResumeIQ** are documented here using [Keep a Changelog]
 
 ---
 
+## [0.5.0-phase5-hardening] — 2026-11-27
+
+### Hardened & Verified (Phase 0–5 Master Completion)
+- **Backend Config, Rate Limiting & Workspace Retention (`app/config.py`, `run.py`, `app/api/rate_limit.py`, `app/api/auth_workspace.py`, `app/__init__.py`):** Removed hardcoded `debug=True` in `run.py`, updated `APP_VERSION` to `"0.5.0-phase5"`, added per-app `SlidingWindowRateLimiter` (`429` w/ `Retry-After`) + `MAX_RESUMES_PER_WORKSPACE` quota (`429`), added `purge_expired_workspaces()` + `flask --app run.py purge-expired-workspaces` CLI command, and enabled `PRAGMA foreign_keys=ON` inside `alembic/env.py` SQLite connections.
+- **Upload & OOXML Boundary Hardening (`app/parsers/detector.py`, `app/services/resume_service.py`):** Separated `MAX_UPLOAD_BYTES` (`5 MB` exact file cap) from `MAX_CONTENT_LENGTH` (`5 MB + 256 KB` multipart overhead) so exact `5.00 MB` uploads succeed cleanly; replaced central-directory-only checks with bounded streaming ZIP entry reads covering small (`>= 4 KB`) and large entries, XXE/DOCTYPE blocking, encrypted ZIP rejection, and binary signature sniffing independent of HTTP `Content-Type`.
+- **PDF & DOCX Extraction Hardening (`app/parsers/pdf_parser.py`, `docx_parser.py`):** Fixed `docx_parser._extract_table_lines` `id(cell._tc)` CPython proxy-recycling bug by holding direct `CT_Tc` references in a set, preventing silent table-row skips; added vector-outlined non-selectable PDF detection (`SCANNED_PDF_DETECTED`).
+- **Frontend 3D Context Loss & Budget Alignment (`HeroVisualStage.tsx`, `HeroPrismCanvas.tsx`, `package.json`):** Aligned 3D stage height to `min-h-[420px]`, added `webglcontextlost`/`webglcontextrestored` fallback overlay handling & geometry/material disposal cleanup, uninstalled unused `@react-three/drei` (`53` packages removed, `0` npm vulnerabilities), and recorded actual chunk measurements.
+- **Documentation & Phase 0–5 Signoff Suite (`README.md`, `markdown/`, `docs/api/openapi-draft.yaml`):** Reconciled `ARCHITECTURE.md`, `TRD.md`, `DEPLOYMENT.md`, `API.md`, `DATABASE.md`, `BRAIN.md`, `acceptance-checklist.md`, and `compliance-matrix.md`; added `traceability-matrix.md`, `known-limitations.md`, and Phase 0–5 completion reports under `markdown/docs/requirements/`.
+- **Live Playwright Chromium E2E Signoff:** Verified responsive layout (`1440x900`, `768x1024`, `375x812`), WebGL 3D rendering + context-loss/unsupported/reduced-motion fallbacks, keyboard Dropzone (`Tab`/skip-link & `Enter`), PDF/DOCX uploads with warnings & PII masking, invalid/spoofed/`>5 MB` rejections, section editing & `PATCH` reload persistence w/ immutable `raw_text`, and accessible `alertdialog` Delete/Purge flows with `0` console, page, or unexpected HTTP errors.
+
+## [0.4.1-p0-remediation] — 2026-11-27
+
+### Security, Data Integrity & Accessibility Fixes (Phase 0–5 P0 Remediation)
+- **PATCH Integrity (`app/schemas/contracts.py`, `app/services/resume_service.py`):** Removed `structured_payload` from `UpdateParsedVersionRequestDTO` (`extra="forbid"` returns `400 VALIDATION_ERROR` on override attempts) and recalculated derived `skills`, `word_count`, `contact_flags_json`, and `masked_contact_json` from edited sections while keeping original `raw_text` immutable.
+- **Sample Seed Canonical Skills (`app/db/seed.py`, `app/api/samples.py`):** Wired `seed_core_data()` through `extract_structured_resume_entities` so seeded synthetic samples populate deduplicated canonical `skills` without duplicating rows (including idempotent backfill for pre-existing sample rows) and expose `skills` and `masked_contact` cleanly.
+- **Complete Contact PII Masking (`app/parsers/entities.py`):** Added deterministic masking helpers for LinkedIn (`linkedin.com/in/r***`), GitHub (`github.com/r***`), and portfolio URLs (`p***.r***.dev/***`) alongside updated `+CC 5+5`/`10`-digit `_PHONE_RE` matching; rendered masked social contact values inside `EditableParsePreview.tsx`.
+- **Frontend A11y & Destructive Confirmations (`frontend/src/components/ConfirmDialog.tsx`, `ResumeDropzone.tsx`, `EditableParsePreview.tsx`, `AnalyzePage.tsx`):** Eliminated nested keyboard tab stops inside `ResumeDropzone` (`tabIndex={-1}`, `aria-hidden="true"`, `className="hidden"` on internal file `<input>`) and added WCAG `role="alertdialog"` confirmation modals with focus trapping/restoration and `Escape` dismissal for `Delete Resume` and `Purge Workspace`.
+
 ## [0.4.0-phase5] — 2026-11-26
 
 ### Added & Verified (Phase 5 — Resume Upload & Parsing Engine)

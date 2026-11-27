@@ -89,6 +89,28 @@ def resolve_valid_workspace(session: Session, raw_token: str | None) -> Workspac
     return workspace
 
 
+def purge_expired_workspaces(
+    session: Session,
+    now: datetime | None = None,
+    limit: int | None = None,
+) -> int:
+    """
+    Delete expired anonymous workspaces and cascade all child resumes, versions,
+    sections, job descriptions, and analyses.
+    """
+    current_time = now or datetime.now(timezone.utc)
+    stmt = select(Workspace).where(Workspace.expires_at <= current_time).order_by(Workspace.expires_at.asc())
+    if limit is not None and limit > 0:
+        stmt = stmt.limit(limit)
+
+    expired_rows = session.scalars(stmt).all()
+    for ws in expired_rows:
+        session.delete(ws)
+    if expired_rows:
+        session.flush()
+    return len(expired_rows)
+
+
 def assert_workspace_ownership(
     resource_workspace_id: UUID | None,
     active_workspace: Workspace,

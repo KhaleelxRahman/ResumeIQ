@@ -29,7 +29,10 @@ def register_api_blueprints(app: Flask) -> None:
         envelope = ErrorEnvelope(
             error=ErrorBody(code=err.code, message=err.message, details=err.details)
         )
-        return jsonify(envelope.model_dump(mode="json")), err.status_code
+        response = jsonify(envelope.model_dump(mode="json"))
+        if err.status_code == 429 and "retry_after_seconds" in err.details:
+            response.headers["Retry-After"] = str(err.details["retry_after_seconds"])
+        return response, err.status_code
 
     @app.errorhandler(DocumentValidationError)
     def handle_document_validation_error(err: DocumentValidationError):
@@ -51,11 +54,11 @@ def register_api_blueprints(app: Flask) -> None:
 
     @app.errorhandler(RequestEntityTooLarge)
     def handle_file_too_large(_err: RequestEntityTooLarge):
-        max_bytes = app.config["APP_CONFIG"].MAX_CONTENT_LENGTH
+        max_bytes = app.config["APP_CONFIG"].MAX_UPLOAD_BYTES
         envelope = ErrorEnvelope(
             error=ErrorBody(
                 code="FILE_TOO_LARGE",
-                message=f"Uploaded payload exceeds the {max_bytes} byte maximum limit.",
+                message=f"Uploaded file exceeds the {max_bytes} byte maximum limit.",
                 details={"max_bytes": max_bytes},
             )
         )

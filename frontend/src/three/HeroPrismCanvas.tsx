@@ -1,10 +1,26 @@
 import { useEffect, useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import type * as THREE from 'three';
+import * as THREE from 'three';
+import { StaticPrismFallback } from './StaticPrismFallback';
 
 interface PointerOffset {
   x: number;
   y: number;
+}
+
+function disposeGroupResources(group: THREE.Group | null): void {
+  if (!group) return;
+  group.traverse((child) => {
+    if (child instanceof THREE.Mesh) {
+      child.geometry?.dispose();
+      const mat = child.material;
+      if (Array.isArray(mat)) {
+        mat.forEach((m) => m.dispose());
+      } else {
+        mat?.dispose();
+      }
+    }
+  });
 }
 
 function CalibrationPrismRig({
@@ -16,6 +32,13 @@ function CalibrationPrismRig({
 }) {
   const groupRef = useRef<THREE.Group>(null);
 
+  useEffect(() => {
+    const group = groupRef.current;
+    return () => {
+      disposeGroupResources(group);
+    };
+  }, []);
+
   useFrame((state, delta) => {
     if (!active || !groupRef.current) return;
     const targetRotY = pointer.x * 0.25 + Math.sin(state.clock.elapsedTime * 0.35) * 0.08;
@@ -26,24 +49,24 @@ function CalibrationPrismRig({
 
   return (
     <group ref={groupRef}>
-      {/* Layer 1: Raw document sheet */}
+      {/* Layer 1: Raw document sheet (12 tris) */}
       <mesh position={[-0.18, 0.08, -0.45]}>
         <boxGeometry args={[1.65, 2.2, 0.04]} />
         <meshStandardMaterial color="#141923" roughness={0.55} metalness={0.35} />
       </mesh>
-      {/* Layer 2: Parsed structured plane */}
+      {/* Layer 2: Parsed structured plane (12 tris) */}
       <mesh position={[0, 0, 0]}>
         <boxGeometry args={[1.65, 2.2, 0.04]} />
         <meshStandardMaterial color="#1B2232" roughness={0.35} metalness={0.5} wireframe={false} />
       </mesh>
-      {/* Layer 3: Diagnostic verification lattice */}
+      {/* Layer 3: Diagnostic verification lattice (12 tris) */}
       <mesh position={[0.18, -0.06, 0.45]}>
         <boxGeometry args={[1.65, 2.2, 0.03]} />
         <meshStandardMaterial color="#7C5CFF" wireframe transparent opacity={0.45} />
       </mesh>
-      {/* Calibrated axis ring (<= 200 triangles) */}
+      {/* Calibrated axis ring (576 tris; total rig = 612 tris, well under 6,000 ceiling) */}
       <mesh rotation={[Math.PI / 2.2, 0.2, 0]}>
-        <torusGeometry args={[1.65, 0.015, 8, 48]} />
+        <torusGeometry args={[1.65, 0.015, 8, 36]} />
         <meshBasicMaterial color="#38BDF8" transparent opacity={0.65} />
       </mesh>
     </group>
@@ -52,8 +75,10 @@ function CalibrationPrismRig({
 
 export default function HeroPrismCanvas() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [canvasEl, setCanvasEl] = useState<HTMLCanvasElement | null>(null);
   const [pointer, setPointer] = useState<PointerOffset>({ x: 0, y: 0 });
   const [inView, setInView] = useState(true);
+  const [contextLost, setContextLost] = useState(false);
   const [tabVisible, setTabVisible] = useState(
     typeof document !== 'undefined' ? !document.hidden : true,
   );
@@ -77,6 +102,25 @@ export default function HeroPrismCanvas() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!canvasEl) return;
+
+    const onContextLost = (event: Event) => {
+      event.preventDefault();
+      setContextLost(true);
+    };
+    const onContextRestored = () => {
+      setContextLost(false);
+    };
+
+    canvasEl.addEventListener('webglcontextlost', onContextLost);
+    canvasEl.addEventListener('webglcontextrestored', onContextRestored);
+    return () => {
+      canvasEl.removeEventListener('webglcontextlost', onContextLost);
+      canvasEl.removeEventListener('webglcontextrestored', onContextRestored);
+    };
+  }, [canvasEl]);
+
   const updateCoordinates = (clientX: number, clientY: number) => {
     const el = containerRef.current;
     if (!el) return;
@@ -90,7 +134,7 @@ export default function HeroPrismCanvas() {
   return (
     <div
       ref={containerRef}
-      className="relative h-full min-h-[380px] w-full"
+      className="relative h-full min-h-[420px] w-full"
       onPointerMove={(e) => updateCoordinates(e.clientX, e.clientY)}
       onTouchMove={(e) => {
         if (e.touches[0]) {
@@ -98,22 +142,31 @@ export default function HeroPrismCanvas() {
         }
       }}
     >
-      <Canvas
-        dpr={[1, 1.75]}
-        camera={{ position: [0, 0, 4.4], fov: 42 }}
-        gl={{ antialias: true, powerPreference: 'low-power' }}
-        aria-label="Interactive 3D calibration prism representing structured resume layers"
-        role="img"
-      >
-        <ambientLight intensity={0.9} />
-        <directionalLight position={[3, 4, 5]} intensity={1.4} color="#F3F5F8" />
-        <pointLight position={[-3, -2, 3]} intensity={1.1} color="#38BDF8" />
-        <CalibrationPrismRig pointer={pointer} active={inView && tabVisible} />
-      </Canvas>
-      <div className="pointer-events-none absolute bottom-3 left-4 right-4 flex flex-wrap justify-between gap-2 border-t border-[var(--border-hairline)] pt-2 font-mono-tabular text-[11px] text-[var(--text-secondary)]">
-        <span>3D CALIBRATION PRISM // &lt;= 6,000 TRIS</span>
-        <span>DPR [1, 1.75] // ZERO SHADOWS</span>
+      <div className={contextLost ? 'pointer-events-none absolute inset-0 opacity-0' : 'h-full min-h-[420px] w-full'}>
+        <Canvas
+          dpr={[1, 1.75]}
+          camera={{ position: [0, 0, 4.4], fov: 42 }}
+          gl={{ antialias: true, powerPreference: 'low-power' }}
+          aria-label="Interactive 3D calibration prism representing structured resume layers"
+          role="img"
+          onCreated={({ gl }) => setCanvasEl(gl.domElement)}
+        >
+          <ambientLight intensity={0.9} />
+          <directionalLight position={[3, 4, 5]} intensity={1.4} color="#F3F5F8" />
+          <pointLight position={[-3, -2, 3]} intensity={1.1} color="#38BDF8" />
+          <CalibrationPrismRig pointer={pointer} active={!contextLost && inView && tabVisible} />
+        </Canvas>
       </div>
+      {contextLost ? (
+        <div className="relative z-10 h-full min-h-[420px] w-full" data-testid="webgl-context-lost-fallback">
+          <StaticPrismFallback />
+        </div>
+      ) : (
+        <div className="pointer-events-none absolute bottom-3 left-4 right-4 flex flex-wrap justify-between gap-2 border-t border-[var(--border-hairline)] pt-2 font-mono-tabular text-[11px] text-[var(--text-secondary)]">
+          <span>3D CALIBRATION PRISM // 612 TRIS</span>
+          <span>DPR [1, 1.75] // ZERO SHADOWS</span>
+        </div>
+      )}
     </div>
   );
 }

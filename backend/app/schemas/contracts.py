@@ -1,10 +1,25 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+
+TemplateSlug = Literal["swiss-technical", "academic-editorial"]
+BuilderSectionType = Literal[
+    "summary",
+    "education",
+    "skills",
+    "projects",
+    "internships",
+    "experience",
+    "certifications",
+    "achievements",
+    "languages",
+    "other",
+]
 
 
 class ErrorBody(BaseModel):
@@ -114,6 +129,14 @@ class ResumeVersionDetailDTO(BaseModel):
     created_at: datetime
 
 
+class ResumeVersionSummaryDTO(BaseModel):
+    version_id: UUID
+    version_number: int
+    template_slug: str
+    word_count: int
+    created_at: datetime
+
+
 class ResumeDetailDTO(BaseModel):
     id: UUID
     title: str
@@ -123,6 +146,7 @@ class ResumeDetailDTO(BaseModel):
     created_at: datetime
     updated_at: datetime
     version: ResumeVersionDetailDTO
+    versions: list[ResumeVersionSummaryDTO] = Field(default_factory=list)
 
 
 class ResumeListItemDTO(BaseModel):
@@ -138,14 +162,77 @@ class ResumeListItemDTO(BaseModel):
     created_at: datetime
 
 
+class BuilderContactDTO(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    full_name: str = Field(min_length=1, max_length=120)
+    email: str = Field(default="", max_length=160)
+    phone: str = Field(default="", max_length=60)
+    location: str = Field(default="", max_length=120)
+    github: str = Field(default="", max_length=240)
+    linkedin: str = Field(default="", max_length=240)
+    portfolio: str = Field(default="", max_length=240)
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def _clean_single_line(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            return " ".join(value.replace("\r", " ").replace("\n", " ").split())
+        return value
+
+
 class EditableSectionInputDTO(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     section_type: str = Field(min_length=1, max_length=48)
     raw_heading: str = Field(min_length=1, max_length=120)
     content_text: str = Field(max_length=40000)
 
 
+class BuilderSectionInputDTO(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    section_type: BuilderSectionType
+    raw_heading: str = Field(min_length=1, max_length=120)
+    content_text: str = Field(min_length=1, max_length=40000)
+
+    @field_validator("raw_heading", "content_text", mode="before")
+    @classmethod
+    def _strip_text(cls, value: Any) -> Any:
+        return value.strip() if isinstance(value, str) else value
+
+
+class BuilderDocumentPayloadDTO(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    template_slug: TemplateSlug = "swiss-technical"
+    contact: BuilderContactDTO
+    sections: list[BuilderSectionInputDTO] = Field(min_length=1, max_length=25)
+
+
+class CreateBuilderResumeRequestDTO(BuilderDocumentPayloadDTO):
+    title: str = Field(min_length=1, max_length=160)
+
+    @field_validator("title", mode="before")
+    @classmethod
+    def _strip_title(cls, value: Any) -> Any:
+        return value.strip() if isinstance(value, str) else value
+
+
+class SaveBuilderVersionRequestDTO(BuilderDocumentPayloadDTO):
+    title: str | None = Field(default=None, min_length=1, max_length=160)
+
+    @field_validator("title", mode="before")
+    @classmethod
+    def _strip_optional_title(cls, value: Any) -> Any:
+        return value.strip() if isinstance(value, str) else value
+
+
 class UpdateParsedVersionRequestDTO(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     title: str | None = Field(default=None, min_length=1, max_length=160)
     candidate_label: str | None = Field(default=None, max_length=120)
+    template_slug: TemplateSlug | None = None
+    contact: BuilderContactDTO | None = None
     sections: list[EditableSectionInputDTO] | None = Field(default=None, min_length=1, max_length=25)
-    structured_payload: dict[str, Any] | None = None

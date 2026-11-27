@@ -2,7 +2,7 @@
 
 A free, student-focused resume builder, ATS analyzer and career readiness platform.
 
-> **Project Status:** Phase 5 Upload & Parsing Engine Complete (`backend/` Flask + `PyMuPDF` + `python-docx` + Alembic; `frontend/` React 18.3 + Vite 8 + Tailwind v4 + lazy R3F Hero). Next milestone: **Phase 6 — Student Resume Builder MVP**.
+> **Project Status (Phases 0–5 Complete):** Secure PDF/DOCX Upload & Parsing Engine (`backend/` Flask `3.1` + `PyMuPDF` + `python-docx` + Alembic + rate limiting + TTL cleanup; `frontend/` React `18.3` + Vite `8.4` + Tailwind v4 + accessible `ConfirmDialog` + lazy R3F Hero w/ WebGL context-loss fallback). Phases 6–10 (**Builder MVP**, **100-pt Quality Score**, **ATS Engine**, **Role Skill Matching API**, **Feedback**, **Dashboard**, **PDF Reports**) are **NOT IMPLEMENTED** yet and scheduled next.
 
 ---
 
@@ -33,10 +33,10 @@ ResumeIQ helps college students, fresh graduates, and entry-level job seekers un
 | Layer | Stack | Notes |
 |---|---|---|
 | **Frontend** | React `18.3`, TypeScript, Vite `8`, Tailwind CSS `v4`, React Router `v7`, Framer Motion, Three.js / R3F, Lucide | 3D Hero Prism lazy-loaded on desktop Landing (`<= 6,000` tris) with automatic static SVG fallback on mobile/reduced-motion. |
-| **Backend** | Python Flask `3.1+`, Flask-CORS, Pydantic `v2`, SQLAlchemy `2.0`, Alembic, Gunicorn (`gthread`) | Framework-independent pure domain engines (`app/parsers/`, `app/nlp/`). |
-| **Database** | Neon PostgreSQL (production), SQLite (local dev & `pytest`) | `pool_pre_ping=True` for Neon 5-minute auto-suspend recovery; SQLite `PRAGMA foreign_keys=ON`. |
-| **Parsing & NLP** | `PyMuPDF`, `python-docx`, deterministic punctuation-safe `skill_matcher` (`spaCy` / `NLTK` / `ReportLab` scheduled across Phases 6–9) | 100% deterministic offline/CPU execution. |
-| **Testing** | `pytest`, Flask `test_client()`, `Vitest`, `@testing-library/react`, `Playwright` (Phase 12) | Synthetic fixtures only; zero real personal resumes in Git. |
+| **Backend** | Python Flask `3.1+`, Flask-CORS, Pydantic `v2`, SQLAlchemy `2.1`, Alembic, Gunicorn (`gthread`) | Framework-independent pure domain engines (`app/parsers/`, `app/nlp/`); rate limiting & expired workspace purge built in. |
+| **Database** | Neon PostgreSQL (production target), SQLite (local dev & `pytest`) | `pool_pre_ping=True` for Neon 5-minute auto-suspend recovery; SQLite `PRAGMA foreign_keys=ON` across runtime and Alembic. |
+| **Parsing & NLP** | `PyMuPDF`, `python-docx`, bounded streaming OOXML ZIP/XXE scanner, deterministic punctuation-safe `skill_matcher` (`spaCy` / `NLTK` / `ReportLab` scheduled across Phases 6–9) | 100% deterministic offline/CPU execution. |
+| **Testing** | `pytest`, Flask `test_client()`, `Vitest`, `@testing-library/react`, `Playwright` *(Phases 0–5 Chromium E2E verified; full suite Phase 12)* | Synthetic fixtures only; zero real personal resumes in Git. |
 
 ---
 
@@ -48,7 +48,7 @@ ResumeIQ/
 ├── backend/                    # Flask app factory, Alembic migrations, parsers, NLP, pytest suite
 ├── frontend/                   # React 18.3 + Vite + TypeScript Obsidian UI & Vitest suite
 ├── docs/                       # OpenAPI draft (docs/api/) and Phase 3 HTML prototypes (docs/design/prototypes/)
-└── markdown/                   # Project Markdown (.md) specifications, ADRs, diagrams & agent guides (51 files)
+└── markdown/                   # Project Markdown (.md) specifications, ADRs, diagrams & agent guides (59 files)
     ├── .agents/                # Multi-agent rules, workflows & 8 specialist guides
     ├── docs/                   # ADRs, Mermaid architecture/ER diagrams, scoring rubric & QA checklists
     └── *.md                    # Product, technical, DB, API, security, QA & deployment specs
@@ -70,6 +70,7 @@ pip install -r requirements.txt
 cp .env.example .env
 alembic upgrade head
 flask --app run.py seed-db
+flask --app run.py purge-expired-workspaces
 python run.py
 ```
 Run backend tests:
