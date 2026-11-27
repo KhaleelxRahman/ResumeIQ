@@ -54,7 +54,7 @@ export function AnalyzePage() {
       setErrorMessage(
         err instanceof Error
           ? err.message
-          : 'Could not reach Flask API. Start backend on port 5000.',
+          : 'Could not reach ResumeIQ backend API.',
       );
       setStatusMessage('Backend offline.');
     } finally {

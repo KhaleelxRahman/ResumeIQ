@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   AlertTriangle,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  FileEdit,
   Info,
   Plus,
   Save,
@@ -150,6 +152,14 @@ export function EditableParsePreview({ resume, onUpdated, onDeleted }: Props) {
               {confidencePct}%
             </div>
           </div>
+
+          <Link
+            to={`/builder?resumeId=${encodeURIComponent(resume.id)}`}
+            className="inline-flex min-h-[40px] items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg border border-[var(--border-strong)] bg-[var(--bg-elevated)] px-3 text-xs font-medium text-[var(--text-primary)] hover:border-[var(--accent-primary)]"
+          >
+            <FileEdit size={14} aria-hidden="true" />
+            <span>Open in Builder</span>
+          </Link>
 
           {!resume.is_sample && (
             <button

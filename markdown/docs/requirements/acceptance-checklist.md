@@ -25,8 +25,10 @@ Used by **QA Engineer** and **Primary Orchestrator** across Phases 2–14.
 - [x] Complete PII masking (`email`, `phone` incl. `+91` `5+5`, `linkedin`, `github`, `portfolio`), single-tab-stop `ResumeDropzone`, and accessible `ConfirmDialog` modals for `Delete Resume` and `Purge Workspace`.
 - [x] Live Playwright Chromium (`156.0.8078.4`) browser E2E verification across `1440x900`, `768x1024`, and `375x812` viewports, WebGL/fallback states, PDF/DOCX uploads, section edits, delete/purge dialogs, and keyboard navigation (`0` console/page errors).
 
-## Phase 6 — Student Resume Builder MVP (Next)
-- [ ] Builder exports crisp PDF (2 ATS-safe templates) that parses back cleanly through ResumeIQ's own `PyMuPDF` parser (`>= 0.95` confidence).
+## Phase 6 — Student Resume Builder MVP (Partial: Frontend Verified / Flask Pending)
+- [x] Interactive Resume Builder UI (`/builder`, `/builder?resumeId=...`), Blank & Student Starter drafts, Personal Info, Summary, repeatable Education/Experience/Internships/Projects/Certifications, deduplicated Skills, section reordering/removal/custom sections, and synchronized live paper preview (`swiss-technical` & `academic-editorial`) verified via Vitest, `node:test`, and Playwright Chromium.
+- [x] Builder save draft (`PATCH`), new version (`POST /versions`), URL reload recovery, PDF download export, and `"Open in Builder"` handoff verified against the Node `/api` compatibility server.
+- [ ] Flask + SQLAlchemy + Alembic persistent storage and ReportLab PDF self-parse verification through `PyMuPDF` (`>= 0.95` confidence) executed in a Python runtime environment.
 
 ## Phase 7–10 — Scoring, Role Matching, Feedback & Reporting
 - [ ] Fresher synthetic resume with strong projects & zero jobs scores `>= 85/100`.

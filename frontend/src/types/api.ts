@@ -77,6 +77,16 @@ export interface ResumeSection {
   order_index: number;
 }
 
+export interface BuilderContact {
+  full_name: string;
+  email: string;
+  phone: string;
+  location: string;
+  github: string;
+  linkedin: string;
+  portfolio: string;
+}
+
 export interface ResumeStructuredPayload {
   candidate_label?: string | null;
   summary?: string | null;
@@ -91,6 +101,15 @@ export interface ResumeStructuredPayload {
   page_count?: number;
   user_edited?: boolean;
   edited_at?: string;
+  builder_contact?: Partial<BuilderContact>;
+}
+
+export interface ResumeVersionSummary {
+  version_id: string;
+  version_number: number;
+  template_slug: string;
+  word_count: number;
+  created_at: string;
 }
 
 export interface ResumeVersionDetail {
@@ -120,6 +139,7 @@ export interface ResumeDetail {
   created_at: string;
   updated_at: string;
   version: ResumeVersionDetail;
+  versions?: ResumeVersionSummary[];
 }
 
 export interface ResumeListItem {
@@ -141,8 +161,45 @@ export interface EditableSectionInput {
   content_text: string;
 }
 
+export type BuilderTemplateSlug = 'swiss-technical' | 'academic-editorial';
+
+export type BuilderSectionType =
+  | 'summary'
+  | 'education'
+  | 'skills'
+  | 'projects'
+  | 'internships'
+  | 'experience'
+  | 'certifications'
+  | 'achievements'
+  | 'languages'
+  | 'other';
+
+export interface BuilderSectionInput {
+  section_type: BuilderSectionType;
+  raw_heading: string;
+  content_text: string;
+}
+
+export interface CreateBuilderResumeRequest {
+  title: string;
+  template_slug: BuilderTemplateSlug;
+  contact: BuilderContact;
+  sections: BuilderSectionInput[];
+}
+
+export interface SaveBuilderVersionRequest {
+  title?: string;
+  template_slug: BuilderTemplateSlug;
+  contact: BuilderContact;
+  sections: BuilderSectionInput[];
+}
+
 export interface UpdateParsedVersionRequest {
   title?: string;
   candidate_label?: string | null;
+  template_slug?: BuilderTemplateSlug;
+  contact?: BuilderContact;
   sections?: EditableSectionInput[];
 }
+

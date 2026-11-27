@@ -1,19 +1,32 @@
 import type {
   ApiErrorEnvelope,
+  CreateBuilderResumeRequest,
   HealthResponse,
   JobRoleDetail,
   JobRoleSummary,
   ResumeDetail,
   ResumeListItem,
   SampleResumeSummary,
+  SaveBuilderVersionRequest,
   UpdateParsedVersionRequest,
   WorkspaceSessionResponse,
   WorkspaceStatusResponse,
 } from '../types/api';
 
-const API_BASE =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '') ||
-  'http://127.0.0.1:5000/api';
+function resolveApiBase(): string {
+  const configured = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '');
+  if (!configured) return '/api';
+  if (
+    typeof window !== 'undefined' &&
+    /^https?:\/\/(127\.0\.0\.1|localhost):5000\/api$/i.test(configured) &&
+    window.location.port !== '5173'
+  ) {
+    return '/api';
+  }
+  return configured;
+}
+
+const API_BASE = resolveApiBase();
 
 const STORAGE_KEY = 'resumeiq_server_workspace_token';
 
@@ -145,8 +158,8 @@ export async function fetchHealth(): Promise<HealthResponse> {
 }
 
 export async function fetchJobRoles(): Promise<JobRoleSummary[]> {
-  const data = await requestJson<{ roles: JobRoleSummary[] }>('/job-roles');
-  return data.roles;
+  const data = await requestJson<{ roles?: JobRoleSummary[] }>('/job-roles');
+  return Array.isArray(data?.roles) ? data.roles : [];
 }
 
 export async function fetchJobRoleDetail(slug: string): Promise<JobRoleDetail> {
@@ -154,8 +167,8 @@ export async function fetchJobRoleDetail(slug: string): Promise<JobRoleDetail> {
 }
 
 export async function fetchSamples(): Promise<SampleResumeSummary[]> {
-  const data = await requestJson<{ samples: SampleResumeSummary[] }>('/samples');
-  return data.samples;
+  const data = await requestJson<{ samples?: SampleResumeSummary[] }>('/samples');
+  return Array.isArray(data?.samples) ? data.samples : [];
 }
 
 export async function uploadResumeFile(file: File, title?: string): Promise<ResumeDetail> {
@@ -172,14 +185,35 @@ export async function uploadResumeFile(file: File, title?: string): Promise<Resu
 
 export async function fetchWorkspaceResumes(includeSamples = true): Promise<ResumeListItem[]> {
   const query = includeSamples ? 'true' : 'false';
-  const data = await requestWithWorkspace<{ resumes: ResumeListItem[] }>(
+  const data = await requestWithWorkspace<{ resumes?: ResumeListItem[] }>(
     `/resumes?include_samples=${query}`,
   );
-  return data.resumes;
+  return Array.isArray(data?.resumes) ? data.resumes : [];
 }
 
-export async function fetchResumeDetail(resumeId: string): Promise<ResumeDetail> {
-  return requestWithWorkspace<ResumeDetail>(`/resumes/${encodeURIComponent(resumeId)}`);
+export async function fetchResumeDetail(resumeId: string, versionId?: string): Promise<ResumeDetail> {
+  const query = versionId ? `?version_id=${encodeURIComponent(versionId)}` : '';
+  return requestWithWorkspace<ResumeDetail>(`/resumes/${encodeURIComponent(resumeId)}${query}`);
+}
+
+export async function createBuilderResume(payload: CreateBuilderResumeRequest): Promise<ResumeDetail> {
+  return requestWithWorkspace<ResumeDetail>('/resumes/builder', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function saveBuilderVersion(
+  resumeId: string,
+  payload: SaveBuilderVersionRequest,
+): Promise<ResumeDetail> {
+  return requestWithWorkspace<ResumeDetail>(
+    `/resumes/${encodeURIComponent(resumeId)}/versions`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+  );
 }
 
 export async function updateParsedVersion(
@@ -196,8 +230,70 @@ export async function updateParsedVersion(
   );
 }
 
+export async function downloadResumePdf(
+  resumeId: string,
+  versionId: string,
+  fallbackFilename = 'resume.pdf',
+): Promise<string> {
+  await ensureServerWorkspaceSession();
+  let token = getStoredWorkspaceToken();
+  const path = `/resumes/${encodeURIComponent(resumeId)}/versions/${encodeURIComponent(versionId)}/export?format=pdf`;
+
+  let res = await fetch(`${API_BASE}${path}`, {
+    method: 'GET',
+    headers: token ? { 'X-Workspace-Token': token } : {},
+  });
+
+  if (res.status === 401) {
+    clearStoredWorkspaceToken();
+    await ensureServerWorkspaceSession();
+    token = getStoredWorkspaceToken();
+    res = await fetch(`${API_BASE}${path}`, {
+      method: 'GET',
+      headers: token ? { 'X-Workspace-Token': token } : {},
+    });
+  }
+
+  if (!res.ok) {
+    const text = await res.text();
+    let parsed: ApiErrorEnvelope | null = null;
+    try {
+      parsed = text ? (JSON.parse(text) as ApiErrorEnvelope) : null;
+    } catch {
+      parsed = null;
+    }
+    throw new ApiClientError(
+      res.status,
+      parsed?.error?.code ?? 'EXPORT_ERROR',
+      parsed?.error?.message ?? 'Could not generate the PDF export right now.',
+      parsed?.error?.details,
+    );
+  }
+
+  const blob = await res.blob();
+  const disposition = res.headers.get('Content-Disposition') ?? '';
+  const match = /filename="?([^"]+)"?/i.exec(disposition);
+  const fileName = match?.[1] || fallbackFilename;
+
+  const objectUrl = window.URL.createObjectURL(blob);
+  try {
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = fileName;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } finally {
+    window.setTimeout(() => window.URL.revokeObjectURL(objectUrl), 1000);
+  }
+
+  return fileName;
+}
+
 export async function deleteResume(resumeId: string): Promise<void> {
   await requestWithWorkspace<void>(`/resumes/${encodeURIComponent(resumeId)}`, {
     method: 'DELETE',
   });
 }
+

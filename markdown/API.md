@@ -58,9 +58,9 @@ Every `4xx` / `5xx` Flask error handler returns:
 | `GET /api/resumes` | List workspace resumes (`?include_samples=true`). | **IMPLEMENTED (Phase 5)** |
 | `GET /api/resumes/:id` | Get resume details, extracted skills, masked contact, and sections (`404` across workspaces). | **IMPLEMENTED (Phase 5)** |
 | `DELETE /api/resumes/:id` | Cascade-delete owned resume + versions + analyses (`403` on samples). | **IMPLEMENTED (Phase 5)** |
-| `POST /api/resumes/builder` | Persist structured resume (`swiss-technical` or `academic-editorial`) as `v1`. | **PLANNED (Phase 6)** |
-| `POST /api/resumes/:id/versions` | Save revised resume snapshot (`vN`). | **PLANNED (Phase 6)** |
-| `GET /api/resumes/:id/versions/:versionId/export?format=pdf` | Stream ReportLab resume PDF. *(DOCX deferred.)* | **PLANNED (Phase 6)** |
+| `POST /api/resumes/builder` | Persist structured resume (`swiss-technical` or `academic-editorial`) as `v1`. | **FRONTEND INTEGRATED (Phase 6)** |
+| `POST /api/resumes/:id/versions` | Save revised resume snapshot (`vN`). | **FRONTEND INTEGRATED (Phase 6)** |
+| `GET /api/resumes/:id/versions/:versionId/export?format=pdf` | Stream PDF resume export. *(DOCX deferred.)* | **FRONTEND INTEGRATED (Phase 6)** |
 
 ### Roles, Analysis, Feedback & Reports *(Phase 4, 7–10)*
 | Method & Path | Purpose | Status |

@@ -39,3 +39,27 @@
 .skip-link:focus {
   top: 16px;
 }
+
+@media print {
+  header,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+
+  body,
+  html {
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+
+  .resume-paper-sheet {
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+}
+

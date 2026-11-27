@@ -1,13 +1,12 @@
-# Known Limitations & Deferred Scope (End of Phase 5)
+# Known Limitations & Deferred Scope (End of Phase 6 Frontend)
 
-Transparent engineering ledger documenting what is **not yet implemented**, **blocked in the current environment**, or **intentionally constrained** at the close of Phases 0–5.
+Transparent engineering ledger documenting what is **not yet implemented**, **blocked in the current environment**, or **intentionally constrained** as of Phase 6 frontend completion.
 
 ---
 
-## 1. Mandatory Capstone Modules Not Yet Implemented (`Phases 6–10`)
+## 1. Mandatory Capstone Modules Status (`Phases 6–10`)
 
-Phases 0–5 cover planning, foundation, upload, validation, extraction, and workspace security only:
-- **Student Resume Builder MVP (`Phase 6` — `NOT IMPLEMENTED`):** `/builder` currently offers template switching preview UI (`Swiss Technical` vs `Academic Editorial`) without persistence routes (`POST /api/resumes/builder`, `POST /api/resumes/:id/versions`) or ReportLab PDF export. DOCX builder export remains intentionally deferred (`ENABLE_DOCX_BUILDER_EXPORT=false`).
+- **Student Resume Builder MVP (`Phase 6` — `PARTIAL: Frontend Complete / Python Backend Blocked in AI Studio`):** Complete structured React Resume Builder (`/builder`), section editors, live paper preview (`swiss-technical` & `academic-editorial`), versioning (`v1`/`v2`), PDF export trigger, and `"Open in Builder"` handoff are implemented and verified against the Node `/api` compatibility layer (`server/`). DOCX builder export remains intentionally deferred (`ENABLE_DOCX_BUILDER_EXPORT=false`).
 - **Deterministic Quality Score `0–100` (`Phase 7` — `NOT IMPLEMENTED`):** `app/scoring/` does not exist yet; rubric weights are specified in [scoring-rubric-spec.md](../database/scoring-rubric-spec.md).
 - **ATS Compatibility Estimate & Role Matching API (`Phases 7–8` — `NOT IMPLEMENTED`):** Only `app/nlp/skill_matcher.py` and the 4 seeded `/api/job-roles` endpoints exist. `POST /api/analyses`, `POST /api/job-descriptions/extract`, and `spaCy`/`NLTK` integrations are pending Phases 7–8.
 - **Smart Deterministic Feedback (`Phase 9` — `NOT IMPLEMENTED`):** Rule-based recommendation generation is pending Phase 9.
@@ -17,11 +16,14 @@ Phases 0–5 cover planning, foundation, upload, validation, extraction, and wor
 
 ## 2. Environment-Blocked Verifications (`BLOCKED`)
 
-1. **Live Neon PostgreSQL Connection & Remote Render/Vercel Deployment (`BLOCKED`):**
+1. **Original Python Flask / SQLAlchemy / Alembic Backend Execution in AI Studio (`BLOCKED`):**
+   - The AI Studio runtime migrated `/backend` to `/server` (Express + in-memory `Map` store + `pdfkit`) on port `3000`. Real SQLite/Neon PostgreSQL persistence, Alembic migrations, `PyMuPDF` self-parse checks, ReportLab PDF rendering, and `pytest` (`test_resume_builder.py`) cannot run inside this Node-only container and require running in the full-stack Python workspace.
+   - Because `/server/store.ts` stores data in RAM only, saved Builder drafts survive browser reloads while the Node process stays alive, rather than across full server process restarts.
+2. **Live Neon PostgreSQL Connection & Remote Render/Vercel Deployment (`BLOCKED`):**
    - No live Neon PostgreSQL `DATABASE_URL` or cloud deployment exists before Phase 13.
-   - PostgreSQL compatibility is verified via SQLAlchemy `CreateTable` / `CreateIndex` DDL compilation in `pytest`; real network connection, SSL handshake, and `alembic upgrade head` against Neon remain pending Phase 13.
-2. **Python CVE Scan (`pip-audit`) (`BLOCKED`):**
-   - `pip check` verified zero broken Python package requirements, and `npm audit` reported `0` vulnerabilities, while `pip-audit` is not installed offline and awaits Phase 11 security audit.
+   - PostgreSQL compatibility was previously verified via SQLAlchemy `CreateTable` / `CreateIndex` DDL compilation in `pytest`; real network connection, SSL handshake, and `alembic upgrade head` against Neon remain pending Phase 13.
+3. **Python CVE Scan (`pip-audit`) (`BLOCKED`):**
+   - `pip-audit` is unavailable offline in this container and awaits Phase 11 security audit in the Python environment.
 
 > **Browser Automation Resolution Note:** `chrome_devtools` MCP remains unattached because the user's normal Chrome profile does not run remote debugging (`DevToolsActivePort` absent, intentionally left untouched). Live interactive browser verification across viewports, WebGL/fallback states, uploads, editing, dialogs, and keyboard navigation is **`COMPLETE`** via isolated **Playwright Chromium (`156.0.8078.4`)**.
 

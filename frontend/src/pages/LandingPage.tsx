@@ -17,7 +17,7 @@ export function LandingPage() {
       if (healthRes.status === 'fulfilled') {
         setHealth(healthRes.value);
       } else {
-        setApiNotice('Backend API offline in standalone frontend preview; start Flask server for live role data.');
+        setApiNotice('Backend API unavailable; retry when server is ready.');
       }
       if (rolesRes.status === 'fulfilled') {
         setRoles(rolesRes.value);
@@ -142,7 +142,7 @@ export function LandingPage() {
               >
                 <div className="mb-2 font-mono-tabular text-[11px] text-[var(--text-muted)]">CORE ROLE</div>
                 <h3 className="text-base font-semibold">{fallbackTitle}</h3>
-                <p className="mt-1 text-xs text-[var(--text-secondary)]">Connect Flask backend on port 5000 to load full taxonomy counts.</p>
+                <p className="mt-1 text-xs text-[var(--text-secondary)]">Role taxonomy loads from the ResumeIQ API.</p>
               </article>
             ))
           )}
