@@ -156,7 +156,7 @@ export function StructuredSectionEditor({
                             skillItems: section.skillItems.filter((_, i) => i !== idx),
                           })
                         }
-                        className="inline-flex h-5 w-5 items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[#fda4af]"
+                        className="inline-flex h-5 w-5 items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--status-danger)]"
                       >
                         <X size={12} aria-hidden="true" />
                       </button>
@@ -184,7 +184,7 @@ export function StructuredSectionEditor({
                 className="space-y-3 rounded-lg border border-[var(--border-hairline)] bg-[var(--bg-canvas)] p-4"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-mono-tabular text-xs font-semibold text-[var(--accent-secondary)]">
+                  <span className="font-mono-tabular text-xs font-semibold text-[var(--accent-secondary-ink)]">
                     Education #{idx + 1}
                   </span>
                   {!readOnly && (
@@ -227,7 +227,7 @@ export function StructuredSectionEditor({
                               educationEntries: section.educationEntries.filter((e) => e.id !== edu.id),
                             })
                           }
-                          className="inline-flex h-8 w-8 items-center justify-center rounded border border-[var(--border-hairline)] text-[var(--text-secondary)] hover:border-[var(--status-danger)] hover:text-[#fda4af]"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded border border-[var(--border-hairline)] text-[var(--text-secondary)] hover:border-[var(--status-danger)] hover:text-[var(--status-danger)]"
                         >
                           <Trash2 size={13} aria-hidden="true" />
                         </button>
@@ -392,7 +392,7 @@ export function StructuredSectionEditor({
                 </div>
 
                 {dateError && (
-                  <p id={`edu-date-err-${edu.id}`} role="alert" className="text-xs text-[#fda4af]">
+                  <p id={`edu-date-err-${edu.id}`} role="alert" className="text-xs font-medium text-[var(--status-danger)]">
                     {dateError}
                   </p>
                 )}
@@ -430,7 +430,7 @@ export function StructuredSectionEditor({
                 className="space-y-3 rounded-lg border border-[var(--border-hairline)] bg-[var(--bg-canvas)] p-4"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-mono-tabular text-xs font-semibold text-[var(--accent-secondary)]">
+                  <span className="font-mono-tabular text-xs font-semibold text-[var(--accent-secondary-ink)]">
                     {label} #{idx + 1}
                   </span>
                   {!readOnly && (
@@ -473,7 +473,7 @@ export function StructuredSectionEditor({
                               experienceEntries: section.experienceEntries.filter((e) => e.id !== exp.id),
                             })
                           }
-                          className="inline-flex h-8 w-8 items-center justify-center rounded border border-[var(--border-hairline)] text-[var(--text-secondary)] hover:border-[var(--status-danger)] hover:text-[#fda4af]"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded border border-[var(--border-hairline)] text-[var(--text-secondary)] hover:border-[var(--status-danger)] hover:text-[var(--status-danger)]"
                         >
                           <Trash2 size={13} aria-hidden="true" />
                         </button>
@@ -620,7 +620,7 @@ export function StructuredSectionEditor({
                 </div>
 
                 {dateError && (
-                  <p id={`exp-date-err-${exp.id}`} role="alert" className="text-xs text-[#fda4af]">
+                  <p id={`exp-date-err-${exp.id}`} role="alert" className="text-xs font-medium text-[var(--status-danger)]">
                     {dateError}
                   </p>
                 )}
@@ -658,7 +658,7 @@ export function StructuredSectionEditor({
                 className="space-y-3 rounded-lg border border-[var(--border-hairline)] bg-[var(--bg-canvas)] p-4"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-mono-tabular text-xs font-semibold text-[var(--accent-secondary)]">
+                  <span className="font-mono-tabular text-xs font-semibold text-[var(--accent-secondary-ink)]">
                     Project #{idx + 1}
                   </span>
                   {!readOnly && (
@@ -701,7 +701,7 @@ export function StructuredSectionEditor({
                               projectEntries: section.projectEntries.filter((p) => p.id !== prj.id),
                             })
                           }
-                          className="inline-flex h-8 w-8 items-center justify-center rounded border border-[var(--border-hairline)] text-[var(--text-secondary)] hover:border-[var(--status-danger)] hover:text-[#fda4af]"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded border border-[var(--border-hairline)] text-[var(--text-secondary)] hover:border-[var(--status-danger)] hover:text-[var(--status-danger)]"
                         >
                           <Trash2 size={13} aria-hidden="true" />
                         </button>
@@ -832,12 +832,12 @@ export function StructuredSectionEditor({
                 </div>
 
                 {urlError && (
-                  <p id={`prj-url-err-${prj.id}`} role="alert" className="text-xs text-[#fda4af]">
+                  <p id={`prj-url-err-${prj.id}`} role="alert" className="text-xs font-medium text-[var(--status-danger)]">
                     {urlError}
                   </p>
                 )}
                 {dateError && (
-                  <p id={`prj-date-err-${prj.id}`} role="alert" className="text-xs text-[#fda4af]">
+                  <p id={`prj-date-err-${prj.id}`} role="alert" className="text-xs font-medium text-[var(--status-danger)]">
                     {dateError}
                   </p>
                 )}
@@ -874,7 +874,7 @@ export function StructuredSectionEditor({
                 className="space-y-3 rounded-lg border border-[var(--border-hairline)] bg-[var(--bg-canvas)] p-4"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-mono-tabular text-xs font-semibold text-[var(--accent-secondary)]">
+                  <span className="font-mono-tabular text-xs font-semibold text-[var(--accent-secondary-ink)]">
                     Certification #{idx + 1}
                   </span>
                   {!readOnly && section.certificationEntries.length > 1 && (
@@ -887,7 +887,7 @@ export function StructuredSectionEditor({
                           certificationEntries: section.certificationEntries.filter((c) => c.id !== cert.id),
                         })
                       }
-                      className="inline-flex h-8 w-8 items-center justify-center rounded border border-[var(--border-hairline)] text-[var(--text-secondary)] hover:border-[var(--status-danger)] hover:text-[#fda4af]"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded border border-[var(--border-hairline)] text-[var(--text-secondary)] hover:border-[var(--status-danger)] hover:text-[var(--status-danger)]"
                     >
                       <Trash2 size={13} aria-hidden="true" />
                     </button>
@@ -975,7 +975,7 @@ export function StructuredSectionEditor({
                 </div>
 
                 {urlError && (
-                  <p id={`cert-url-err-${cert.id}`} role="alert" className="text-xs text-[#fda4af]">
+                  <p id={`cert-url-err-${cert.id}`} role="alert" className="text-xs font-medium text-[var(--status-danger)]">
                     {urlError}
                   </p>
                 )}

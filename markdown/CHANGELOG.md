@@ -4,6 +4,12 @@ All notable changes to **ResumeIQ** are documented here using [Keep a Changelog]
 
 ---
 
+## [0.6.2-post-cleanup-audit] — 2026-11-27
+
+### Design Alignment & Audit (Post-Cleanup Final Verification)
+- **Warm Ivory Editorial Palette (`frontend/index.html`, `tokens.css`, `index.css`, `AppLayout.tsx`, `ConfirmDialog.tsx`, pages & components):** Replaced all active Obsidian dark-theme tokens (`#090b10`, `#11151e`, `#171d29`, `#7c5cff`, `#38bdf8`) and dark-mode pastel status colors (`#86efac`, `#fcd34d`, `#fda4af`) with the Warm Ivory editorial palette (`#F7F6F2` canvas, `#FFFFFF` surface, `#EFECE5` elevated paper, `#252622` Graphite, `#73746D` Secondary, `#E45B42` Vermilion, `#A7B49A` Muted Sage with `#4A593D` accessible ink contrast, `#E6E3DC` border); loaded `Fraunces` display, `Plus Jakarta Sans` UI, and `JetBrains Mono` metric fonts; removed backdrop glassmorphism, pill badge kickers, and `//` code-comment headings across all active pages while preserving `/results/:analysisId` and `/history` with honest empty states.
+- **3D Calibration Prism Re-Alignment (`HeroPrismCanvas.tsx`, `StaticPrismFallback.tsx`):** Preserved the landing-page-confined, lazy-loaded 3D stage (`612` tris, zero shadows, `DPR [1, 1.75]`, `<768px` static mobile exclusion, `prefers-reduced-motion` fallback, `webglcontextlost` recovery, unmount disposal) and re-aligned its 3D materials, lighting, and SVG fallback to Warm Ivory / Graphite / Muted Sage / Vermilion.
+
 ## [0.6.1-scope-cleanup] — 2026-11-27
 
 ### Removed & Cleaned (Strict Project Scope Cleanup)

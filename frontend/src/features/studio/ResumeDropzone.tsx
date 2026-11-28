@@ -62,7 +62,7 @@ function mapUploadErrorGuidance(err: unknown): { title: string; detail: string; 
 
   return {
     title: 'Upload Connection Error',
-    detail: err instanceof Error ? err.message : 'Unable to reach the Flask parsing server.',
+    detail: err instanceof Error ? err.message : 'Unable to reach the ResumeIQ service.',
   };
 }
 
@@ -148,7 +148,7 @@ export function ResumeDropzone({ disabled = false, onUploaded }: Props) {
             Strict 5 MB limit. Magic-byte &amp; OOXML safety verified; original binary deleted immediately after extraction.
           </p>
         </div>
-        <span className="inline-flex items-center gap-1.5 font-mono-tabular text-[11px] text-[var(--accent-secondary)]">
+        <span className="inline-flex items-center gap-1.5 font-mono-tabular text-[11px] font-medium text-[var(--accent-secondary-ink)]">
           <ShieldCheck size={14} aria-hidden="true" />
           <span>ZERO BINARY RETENTION</span>
         </span>
@@ -216,10 +216,10 @@ export function ResumeDropzone({ disabled = false, onUploaded }: Props) {
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2">
-            <FileUp size={26} className="text-[var(--accent-secondary)]" aria-hidden="true" />
+            <FileUp size={26} className="text-[var(--accent-secondary-ink)]" aria-hidden="true" />
             <p className="text-sm font-medium">
-              Drag &amp; drop your <span className="font-mono-tabular text-[var(--accent-secondary)]">.pdf</span> or{' '}
-              <span className="font-mono-tabular text-[var(--accent-secondary)]">.docx</span> resume here
+              Drag &amp; drop your <span className="font-mono-tabular font-semibold text-[var(--accent-secondary-ink)]">.pdf</span> or{' '}
+              <span className="font-mono-tabular font-semibold text-[var(--accent-secondary-ink)]">.docx</span> resume here
             </p>
             <p className="text-xs text-[var(--text-secondary)]">or click / press Enter to choose a file (max 5 MB)</p>
           </div>
@@ -230,7 +230,7 @@ export function ResumeDropzone({ disabled = false, onUploaded }: Props) {
         <div
           role="status"
           aria-live="polite"
-          className="mt-3 rounded-lg border border-[var(--status-success)]/40 bg-[var(--status-success)]/10 px-3.5 py-2.5 text-xs text-[#86efac]"
+          className="mt-3 rounded-lg border border-[var(--status-success)]/35 bg-[var(--status-success-bg)] px-3.5 py-2.5 text-xs font-medium text-[var(--status-success)]"
         >
           Successfully extracted &ldquo;{successName}&rdquo;. Review and verify parsed sections on the right before analysis.
         </div>
@@ -239,7 +239,7 @@ export function ResumeDropzone({ disabled = false, onUploaded }: Props) {
       {errorState && (
         <div
           role="alert"
-          className="mt-3 flex items-start gap-2.5 rounded-lg border border-[var(--status-danger)]/50 bg-[var(--status-danger)]/10 px-3.5 py-3 text-xs"
+          className="mt-3 flex items-start gap-2.5 rounded-lg border border-[var(--status-danger)]/35 bg-[var(--status-danger-bg)] px-3.5 py-3 text-xs"
         >
           {errorState.code === 'SCANNED_PDF_DETECTED' ? (
             <AlertTriangle size={17} className="mt-0.5 shrink-0 text-[var(--status-warning)]" aria-hidden="true" />

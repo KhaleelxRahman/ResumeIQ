@@ -76,7 +76,7 @@ export function ConfirmDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#252622]/45 px-4"
       onClick={() => {
         if (!busy) onCancel();
       }}
@@ -87,10 +87,10 @@ export function ConfirmDialog({
         aria-labelledby={titleId}
         aria-describedby={descriptionId}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-xl border border-[var(--border-strong)] bg-[var(--bg-surface)] p-6 shadow-2xl"
+        className="w-full max-w-md rounded-xl border border-[var(--border-strong)] bg-[var(--bg-surface)] p-6 shadow-xl"
       >
         <div className="flex items-start gap-3">
-          <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--status-danger)]/40 bg-[var(--status-danger)]/10 text-[#fda4af]">
+          <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--status-danger)]/30 bg-[var(--status-danger-bg)] text-[var(--status-danger)]">
             <AlertTriangle size={18} aria-hidden="true" />
           </div>
           <div>
@@ -118,7 +118,7 @@ export function ConfirmDialog({
             type="button"
             disabled={busy}
             onClick={() => void onConfirm()}
-            className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-[var(--status-danger)] px-4 text-xs font-semibold text-white hover:bg-[#e11d48] disabled:opacity-60"
+            className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-[var(--status-danger)] px-4 text-xs font-semibold text-white hover:bg-[var(--status-danger-hover)] disabled:opacity-60"
           >
             {busy ? 'Processing...' : confirmLabel}
           </button>

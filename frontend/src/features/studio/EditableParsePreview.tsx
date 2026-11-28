@@ -117,10 +117,10 @@ export function EditableParsePreview({ resume, onUpdated, onDeleted }: Props) {
     >
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--border-hairline)] pb-4">
         <div>
-          <div className="flex flex-wrap items-center gap-2 font-mono-tabular text-[11px] text-[var(--accent-secondary)]">
-            <span>PARSE PREVIEW // {resume.source_type.toUpperCase()}</span>
+          <div className="flex flex-wrap items-center gap-2 font-mono-tabular text-[11px] font-medium text-[var(--accent-secondary-ink)]">
+            <span>Parse Preview · {resume.source_type.toUpperCase()}</span>
             {resume.version.structured_payload.user_edited && (
-              <span className="rounded bg-[var(--status-success)]/15 px-2 py-0.5 text-[#86efac]">
+              <span className="rounded bg-[var(--status-success-bg)] px-2 py-0.5 text-[var(--status-success)]">
                 VERIFIED BY USER
               </span>
             )}
@@ -160,7 +160,7 @@ export function EditableParsePreview({ resume, onUpdated, onDeleted }: Props) {
             type="button"
             disabled={deleting}
             onClick={() => setConfirmDeleteOpen(true)}
-            className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-[var(--status-danger)]/40 bg-[var(--bg-elevated)] px-3 text-xs font-medium text-[#fda4af] hover:bg-[var(--status-danger)]/10 disabled:opacity-50"
+            className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-[var(--status-danger)]/40 bg-[var(--bg-surface)] px-3 text-xs font-medium text-[var(--status-danger)] hover:bg-[var(--status-danger-bg)] disabled:opacity-50"
           >
             <Trash2 size={14} aria-hidden="true" />
             <span>{deleting ? 'Deleting...' : 'Delete Resume'}</span>
@@ -175,14 +175,14 @@ export function EditableParsePreview({ resume, onUpdated, onDeleted }: Props) {
               key={`${w.code}-${idx}`}
               className={`flex items-start gap-2.5 rounded-lg border px-3.5 py-2.5 text-xs ${
                 w.severity === 'warning'
-                  ? 'border-[var(--status-warning)]/40 bg-[var(--status-warning)]/10 text-[#fcd34d]'
+                  ? 'border-[var(--status-warning)]/35 bg-[var(--status-warning-bg)] font-medium text-[var(--status-warning)]'
                   : 'border-[var(--border-hairline)] bg-[var(--bg-canvas)] text-[var(--text-secondary)]'
               }`}
             >
               {w.severity === 'warning' ? (
                 <AlertTriangle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
               ) : (
-                <Info size={15} className="mt-0.5 shrink-0 text-[var(--accent-secondary)]" aria-hidden="true" />
+                <Info size={15} className="mt-0.5 shrink-0 text-[var(--accent-secondary-ink)]" aria-hidden="true" />
               )}
               <div>
                 <span className="font-mono-tabular text-[11px] font-semibold">[{w.code}]</span>{' '}
@@ -301,7 +301,7 @@ export function EditableParsePreview({ resume, onUpdated, onDeleted }: Props) {
                   next[idx] = { ...next[idx], section_type: e.target.value };
                   setSections(next);
                 }}
-                className="rounded border border-[var(--border-strong)] bg-[var(--bg-surface)] px-2.5 py-1.5 font-mono-tabular text-xs text-[var(--accent-secondary)] disabled:opacity-60"
+                className="rounded border border-[var(--border-strong)] bg-[var(--bg-surface)] px-2.5 py-1.5 font-mono-tabular text-xs font-medium text-[var(--accent-secondary-ink)] disabled:opacity-60"
               >
                 {SECTION_TYPE_OPTIONS.map((opt) => (
                   <option key={opt} value={opt}>
@@ -327,7 +327,7 @@ export function EditableParsePreview({ resume, onUpdated, onDeleted }: Props) {
                   type="button"
                   aria-label={`Remove section ${sec.raw_heading}`}
                   onClick={() => setSections((prev) => prev.filter((_, i) => i !== idx))}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded border border-[var(--border-hairline)] text-[var(--text-secondary)] hover:border-[var(--status-danger)] hover:text-[#fda4af]"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded border border-[var(--border-hairline)] text-[var(--text-secondary)] hover:border-[var(--status-danger)] hover:bg-[var(--status-danger-bg)] hover:text-[var(--status-danger)]"
                 >
                   <Trash2 size={14} aria-hidden="true" />
                 </button>
@@ -354,8 +354,8 @@ export function EditableParsePreview({ resume, onUpdated, onDeleted }: Props) {
           role={feedback.kind === 'err' ? 'alert' : 'status'}
           className={`flex items-center gap-2 rounded-lg border px-3.5 py-2.5 text-xs ${
             feedback.kind === 'ok'
-              ? 'border-[var(--status-success)]/40 bg-[var(--status-success)]/10 text-[#86efac]'
-              : 'border-[var(--status-danger)]/40 bg-[var(--status-danger)]/10 text-[#fda4af]'
+              ? 'border-[var(--status-success)]/35 bg-[var(--status-success-bg)] font-medium text-[var(--status-success)]'
+              : 'border-[var(--status-danger)]/35 bg-[var(--status-danger-bg)] font-medium text-[var(--status-danger)]'
           }`}
         >
           <CheckCircle2 size={15} aria-hidden="true" />

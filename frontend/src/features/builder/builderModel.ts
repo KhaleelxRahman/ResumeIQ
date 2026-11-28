@@ -722,7 +722,7 @@ function extractContactFromResume(detail: ResumeDetail): BuilderContact {
 
   base.full_name = cleanSingleLine(detail.version.candidate_label ?? lines[0] ?? '');
 
-  // Extract contact tokens safely from raw header lines or sample raw_text header (before first blank line)
+  // Extract contact tokens safely from raw header lines or raw_text header (before first blank line)
   const rawHeaderChunk = (detail.version.raw_text || '').split(/\n{2,}/)[0] ?? '';
   const searchSource = [...lines, rawHeaderChunk].join(' | ');
   const tokens = searchSource

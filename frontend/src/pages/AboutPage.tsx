@@ -1,8 +1,8 @@
 export function AboutPage() {
   return (
     <div className="mx-auto max-w-[1120px] px-4 py-12 sm:px-6">
-      <span className="font-mono-tabular text-xs text-[var(--accent-secondary)]">
-        TRANSPARENCY, PRIVACY &amp; METHODOLOGY
+      <span className="font-mono-tabular text-xs font-medium tracking-wider text-[var(--accent-secondary-ink)] uppercase">
+        Transparency, Privacy &amp; Methodology
       </span>
       <h1 className="mt-2 text-2xl font-bold sm:text-3xl">How ResumeIQ Evaluates Resumes</h1>
       <p className="mt-2 max-w-[70ch] text-sm text-[var(--text-secondary)]">

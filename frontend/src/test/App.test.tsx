@@ -76,7 +76,7 @@ describe('ResumeIQ Phase 4 Frontend Shell', () => {
     expect(
       screen.getByRole('heading', { name: /ATS Compatibility Estimate/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/CALIBRATION PRISM \/\/ SVG FALLBACK/i)).toBeInTheDocument();
+    expect(screen.getByText(/Calibration Prism · Static SVG/i)).toBeInTheDocument();
     expect(await screen.findByText('6 mandatory / 8 preferred')).toBeInTheDocument();
     expect(screen.getByText('Data Analyst')).toBeInTheDocument();
   });
@@ -167,7 +167,7 @@ describe('ResumeIQ Phase 4 Frontend Shell', () => {
       );
       expect(await screen.findByRole('heading', { name: entry.heading })).toBeInTheDocument();
       if (entry.path === '/') {
-        expect(screen.getByText(/CALIBRATION PRISM \/\/ SVG FALLBACK/i)).toBeInTheDocument();
+        expect(screen.getByText(/Calibration Prism · Static SVG/i)).toBeInTheDocument();
       }
       cleanup();
     }
@@ -184,7 +184,7 @@ describe('ResumeIQ Phase 4 Frontend Shell', () => {
         <BoomCanvas />
       </WebGLErrorBoundary>,
     );
-    expect(screen.getByText(/CALIBRATION PRISM \/\/ SVG FALLBACK/i)).toBeInTheDocument();
+    expect(screen.getByText(/Calibration Prism · Static SVG/i)).toBeInTheDocument();
     consoleErr.mockRestore();
   });
 

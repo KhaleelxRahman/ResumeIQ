@@ -35,7 +35,7 @@ export function PersonalInfoForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label htmlFor="contact-full-name" className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]">
-            Full Name <span className="text-[#fda4af]">*</span>
+            Full Name <span className="text-[var(--status-danger)]">*</span>
           </label>
           <input
             id="contact-full-name"
@@ -45,11 +45,11 @@ export function PersonalInfoForm({
             aria-invalid={Boolean(errors.full_name)}
             aria-describedby={errors.full_name ? 'contact-full-name-error' : undefined}
             onChange={(e) => updateField('full_name', e.target.value)}
-            placeholder="e.g., Aarav Sharma"
+            placeholder="e.g., Full Name"
             className="min-h-[42px] w-full rounded-lg border border-[var(--border-strong)] bg-[var(--bg-canvas)] px-3 py-2 text-sm text-[var(--text-primary)] disabled:opacity-60"
           />
           {errors.full_name && (
-            <p id="contact-full-name-error" role="alert" className="mt-1 text-xs text-[#fda4af]">
+            <p id="contact-full-name-error" role="alert" className="mt-1 text-xs font-medium text-[var(--status-danger)]">
               {errors.full_name}
             </p>
           )}
@@ -71,7 +71,7 @@ export function PersonalInfoForm({
             className="min-h-[42px] w-full rounded-lg border border-[var(--border-strong)] bg-[var(--bg-canvas)] px-3 py-2 text-sm text-[var(--text-primary)] disabled:opacity-60"
           />
           {errors.email && (
-            <p id="contact-email-error" role="alert" className="mt-1 text-xs text-[#fda4af]">
+            <p id="contact-email-error" role="alert" className="mt-1 text-xs text-[var(--status-danger)]">
               {errors.email}
             </p>
           )}
@@ -123,7 +123,7 @@ export function PersonalInfoForm({
             className="min-h-[42px] w-full rounded-lg border border-[var(--border-strong)] bg-[var(--bg-canvas)] px-3 py-2 text-sm text-[var(--text-primary)] disabled:opacity-60"
           />
           {errors.linkedin && (
-            <p id="contact-linkedin-error" role="alert" className="mt-1 text-xs text-[#fda4af]">
+            <p id="contact-linkedin-error" role="alert" className="mt-1 text-xs text-[var(--status-danger)]">
               {errors.linkedin}
             </p>
           )}
@@ -145,7 +145,7 @@ export function PersonalInfoForm({
             className="min-h-[42px] w-full rounded-lg border border-[var(--border-strong)] bg-[var(--bg-canvas)] px-3 py-2 text-sm text-[var(--text-primary)] disabled:opacity-60"
           />
           {errors.github && (
-            <p id="contact-github-error" role="alert" className="mt-1 text-xs text-[#fda4af]">
+            <p id="contact-github-error" role="alert" className="mt-1 text-xs text-[var(--status-danger)]">
               {errors.github}
             </p>
           )}
@@ -167,7 +167,7 @@ export function PersonalInfoForm({
             className="min-h-[42px] w-full rounded-lg border border-[var(--border-strong)] bg-[var(--bg-canvas)] px-3 py-2 text-sm text-[var(--text-primary)] disabled:opacity-60"
           />
           {errors.portfolio && (
-            <p id="contact-portfolio-error" role="alert" className="mt-1 text-xs text-[#fda4af]">
+            <p id="contact-portfolio-error" role="alert" className="mt-1 text-xs text-[var(--status-danger)]">
               {errors.portfolio}
             </p>
           )}

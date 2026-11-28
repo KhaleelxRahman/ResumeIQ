@@ -127,8 +127,8 @@ export function AnalyzePage() {
   return (
     <div className="mx-auto max-w-[1320px] px-4 py-10 sm:px-6">
       <div className="mb-6 border-b border-[var(--border-hairline)] pb-5">
-        <span className="font-mono-tabular text-xs text-[var(--accent-secondary)]">
-          UPLOAD &amp; PARSE STUDIO
+        <span className="font-mono-tabular text-xs font-medium tracking-wider text-[var(--accent-secondary-ink)] uppercase">
+          Upload &amp; Parse Studio
         </span>
         <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
           Upload, Extract &amp; Verify Resume Structure
@@ -166,7 +166,7 @@ export function AnalyzePage() {
             type="button"
             disabled={busy || !workspace}
             onClick={() => setConfirmPurgeOpen(true)}
-            className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-[var(--status-danger)]/40 bg-[var(--bg-elevated)] px-3 text-xs font-medium text-[#fda4af] hover:bg-[var(--status-danger)]/10 disabled:opacity-50"
+            className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-[var(--status-danger)]/40 bg-[var(--bg-surface)] px-3 text-xs font-medium text-[var(--status-danger)] hover:bg-[var(--status-danger-bg)] disabled:opacity-50"
           >
             <Trash2 size={14} aria-hidden="true" />
             <span>Purge Workspace</span>
@@ -199,14 +199,14 @@ export function AnalyzePage() {
                     >
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5 truncate text-xs font-semibold">
-                          <FileText size={13} className="shrink-0 text-[var(--accent-secondary)]" aria-hidden="true" />
+                          <FileText size={13} className="shrink-0 text-[var(--accent-secondary-ink)]" aria-hidden="true" />
                           <span className="truncate">{item.title}</span>
                         </div>
                         <div className="mt-0.5 font-mono-tabular text-[11px] text-[var(--text-secondary)]">
                           {item.source_type.toUpperCase()} • {item.word_count} words
                         </div>
                       </div>
-                      <span className="shrink-0 font-mono-tabular text-xs text-[var(--accent-secondary)]">
+                      <span className="shrink-0 font-mono-tabular text-xs font-semibold text-[var(--accent-secondary-ink)]">
                         {Math.round(item.extraction_confidence * 100)}%
                       </span>
                     </button>

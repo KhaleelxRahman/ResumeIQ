@@ -1,24 +1,30 @@
 :root {
-  --bg-canvas: #090b10;
-  --bg-surface: #11151e;
-  --bg-elevated: #171d29;
-  --bg-paper: #ffffff;
+  --bg-canvas: #F7F6F2;
+  --bg-surface: #FFFFFF;
+  --bg-elevated: #EFECE5;
+  --bg-paper: #FFFFFF;
 
-  --border-hairline: rgba(243, 245, 248, 0.09);
-  --border-strong: rgba(243, 245, 248, 0.22);
+  --border-hairline: #E6E3DC;
+  --border-strong: #CFCAC0;
 
-  --text-primary: #f3f5f8;
-  --text-secondary: #9ca7b8;
-  --text-muted: #6e7a8c;
+  --text-primary: #252622;
+  --text-secondary: #73746D;
+  --text-muted: #5C5D56;
 
-  --accent-primary: #7c5cff;
-  --accent-primary-hover: #6c47ff;
-  --accent-secondary: #38bdf8;
+  --accent-primary: #E45B42;
+  --accent-primary-hover: #C94831;
+  --accent-secondary: #A7B49A;
+  --accent-secondary-ink: #4A593D;
 
-  --status-success: #22c55e;
-  --status-warning: #f59e0b;
-  --status-danger: #f43f5e;
+  --status-success: #2A7B4C;
+  --status-success-bg: #EDF6F0;
+  --status-warning: #9A5B13;
+  --status-warning-bg: #FCF4E6;
+  --status-danger: #B4322B;
+  --status-danger-hover: #962620;
+  --status-danger-bg: #FCEEEB;
 
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 }

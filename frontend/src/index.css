@@ -11,6 +11,12 @@
     min-height: 100%;
   }
 
+  h1,
+  .font-display {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
   .font-mono-tabular {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;

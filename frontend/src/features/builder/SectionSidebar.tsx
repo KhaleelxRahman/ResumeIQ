@@ -63,7 +63,7 @@ export function SectionSidebar({
               : 'border-[var(--border-hairline)] bg-[var(--bg-canvas)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]'
           }`}
         >
-          <User size={14} className="shrink-0 text-[var(--accent-secondary)]" aria-hidden="true" />
+          <User size={14} className="shrink-0 text-[var(--accent-secondary-ink)]" aria-hidden="true" />
           <span>Personal &amp; Contact Info</span>
         </button>
 
@@ -112,7 +112,7 @@ export function SectionSidebar({
                       type="button"
                       aria-label={`Remove ${sec.heading} section`}
                       onClick={() => onRemoveSection(sec.id)}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--status-danger)]/10 hover:text-[#fda4af]"
+                      className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--status-danger-bg)] hover:text-[var(--status-danger)]"
                     >
                       <Trash2 size={13} aria-hidden="true" />
                     </button>

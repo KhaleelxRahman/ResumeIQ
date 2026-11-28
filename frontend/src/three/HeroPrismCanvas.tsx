@@ -52,22 +52,22 @@ function CalibrationPrismRig({
       {/* Layer 1: Raw document sheet (12 tris) */}
       <mesh position={[-0.18, 0.08, -0.45]}>
         <boxGeometry args={[1.65, 2.2, 0.04]} />
-        <meshStandardMaterial color="#141923" roughness={0.55} metalness={0.35} />
+        <meshStandardMaterial color="#E6E3DC" roughness={0.65} metalness={0.08} />
       </mesh>
       {/* Layer 2: Parsed structured plane (12 tris) */}
       <mesh position={[0, 0, 0]}>
         <boxGeometry args={[1.65, 2.2, 0.04]} />
-        <meshStandardMaterial color="#1B2232" roughness={0.35} metalness={0.5} wireframe={false} />
+        <meshStandardMaterial color="#FFFFFF" roughness={0.55} metalness={0.1} wireframe={false} />
       </mesh>
       {/* Layer 3: Diagnostic verification lattice (12 tris) */}
       <mesh position={[0.18, -0.06, 0.45]}>
         <boxGeometry args={[1.65, 2.2, 0.03]} />
-        <meshStandardMaterial color="#7C5CFF" wireframe transparent opacity={0.45} />
+        <meshStandardMaterial color="#A7B49A" wireframe transparent opacity={0.6} />
       </mesh>
       {/* Calibrated axis ring (576 tris; total rig = 612 tris, well under 6,000 ceiling) */}
       <mesh rotation={[Math.PI / 2.2, 0.2, 0]}>
         <torusGeometry args={[1.65, 0.015, 8, 36]} />
-        <meshBasicMaterial color="#38BDF8" transparent opacity={0.65} />
+        <meshBasicMaterial color="#E45B42" transparent opacity={0.85} />
       </mesh>
     </group>
   );
@@ -151,9 +151,9 @@ export default function HeroPrismCanvas() {
           role="img"
           onCreated={({ gl }) => setCanvasEl(gl.domElement)}
         >
-          <ambientLight intensity={0.9} />
-          <directionalLight position={[3, 4, 5]} intensity={1.4} color="#F3F5F8" />
-          <pointLight position={[-3, -2, 3]} intensity={1.1} color="#38BDF8" />
+          <ambientLight intensity={1.15} color="#FFFDF9" />
+          <directionalLight position={[3, 4, 5]} intensity={1.25} color="#FFFDF9" />
+          <pointLight position={[-3, -2, 3]} intensity={0.75} color="#A7B49A" />
           <CalibrationPrismRig pointer={pointer} active={!contextLost && inView && tabVisible} />
         </Canvas>
       </div>
@@ -163,8 +163,8 @@ export default function HeroPrismCanvas() {
         </div>
       ) : (
         <div className="pointer-events-none absolute bottom-3 left-4 right-4 flex flex-wrap justify-between gap-2 border-t border-[var(--border-hairline)] pt-2 font-mono-tabular text-[11px] text-[var(--text-secondary)]">
-          <span>3D CALIBRATION PRISM // 612 TRIS</span>
-          <span>DPR [1, 1.75] // ZERO SHADOWS</span>
+          <span>Calibration Prism · 612 tris</span>
+          <span>DPR 1–1.75 · Zero shadows</span>
         </div>
       )}
     </div>

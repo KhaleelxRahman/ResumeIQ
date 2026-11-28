@@ -29,9 +29,9 @@ export function LandingPage() {
     <div className="mx-auto max-w-[1320px] px-4 py-12 sm:px-6 lg:py-16">
       <section className="grid items-center gap-10 border-b border-[var(--border-hairline)] pb-14 lg:grid-cols-12">
         <div className="lg:col-span-7">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[var(--border-hairline)] bg-[var(--bg-surface)] px-3.5 py-1.5 font-mono-tabular text-xs text-[var(--accent-secondary)]">
-            <span>01 // STUDENT-FIRST CAREER INTELLIGENCE</span>
-          </div>
+          <p className="mb-4 font-mono-tabular text-xs font-medium tracking-wider text-[var(--accent-secondary-ink)] uppercase">
+            Student-First Career Intelligence · Free &amp; Explainable
+          </p>
 
           <h1 className="mb-5 text-4xl font-bold tracking-[-0.03em] leading-[1.05] text-[var(--text-primary)] sm:text-5xl lg:text-6xl">
             Build ATS-ready resumes. Inspect every score down to the line.
@@ -58,8 +58,8 @@ export function LandingPage() {
             </Link>
           </div>
 
-          <p className="border-l-2 border-[var(--accent-primary)] pl-3 text-xs text-[var(--text-secondary)]">
-            Honest evaluation policy: ATS Compatibility is a deterministic simulation estimate, never a guarantee of employer selection. Raw uploaded binaries are deleted immediately after parsing.
+          <p className="rounded-lg border border-[var(--border-hairline)] bg-[var(--bg-surface)] px-4 py-3 text-xs leading-relaxed text-[var(--text-secondary)]">
+            <strong className="font-semibold text-[var(--text-primary)]">Honest evaluation policy:</strong> ATS Compatibility is a deterministic simulation estimate, never a guarantee of employer selection. Raw uploaded files are deleted immediately after parsing.
           </p>
         </div>
 
@@ -70,21 +70,21 @@ export function LandingPage() {
 
       <section aria-label="Three Separate Metrics" className="mt-12 grid gap-px overflow-hidden rounded-xl border border-[var(--border-hairline)] bg-[var(--border-hairline)] md:grid-cols-3">
         <article className="bg-[var(--bg-surface)] p-6">
-          <div className="mb-2 font-mono-tabular text-xs text-[var(--accent-secondary)]">METRIC 01 // QUALITY (0-100)</div>
+          <div className="mb-2 font-mono-tabular text-xs font-medium text-[var(--accent-secondary-ink)]">01 · Quality Score (0–100)</div>
           <h2 className="mb-2 text-lg font-semibold">Student-Fair Structural Audit</h2>
           <p className="text-sm text-[var(--text-secondary)]">
             Scores Structure, Skills, Education, Projects, Contact, and Completeness—substituting project depth cleanly for students without prior full-time experience.
           </p>
         </article>
         <article className="bg-[var(--bg-surface)] p-6">
-          <div className="mb-2 font-mono-tabular text-xs text-[var(--accent-secondary)]">METRIC 02 // ATS ESTIMATE (0-100)</div>
+          <div className="mb-2 font-mono-tabular text-xs font-medium text-[var(--accent-secondary-ink)]">02 · ATS Estimate (0–100)</div>
           <h2 className="mb-2 text-lg font-semibold">ATS Compatibility Estimate</h2>
           <p className="text-sm text-[var(--text-secondary)]">
             Simulation estimating parseability, multi-column layout warnings, standard headings, and role keyword coverage. Never conflated with Quality Score.
           </p>
         </article>
         <article className="bg-[var(--bg-surface)] p-6">
-          <div className="mb-2 font-mono-tabular text-xs text-[var(--accent-secondary)]">METRIC 03 // ROLE MATCH (%)</div>
+          <div className="mb-2 font-mono-tabular text-xs font-medium text-[var(--accent-secondary-ink)]">03 · Role Skill Match (%)</div>
           <h2 className="mb-2 text-lg font-semibold">Evidence-Backed Skill Gaps</h2>
           <p className="text-sm text-[var(--text-secondary)]">
             Punctuation-safe detection (C, C++, C#, R, Go, JavaScript) showing matched, synonym-inferred, and not-detected keywords with exact text evidence.
@@ -118,7 +118,7 @@ export function LandingPage() {
                 className="flex flex-col justify-between rounded-xl border border-[var(--border-hairline)] bg-[var(--bg-surface)] p-5"
               >
                 <div>
-                  <div className="mb-2 flex items-center justify-between font-mono-tabular text-[11px] text-[var(--accent-secondary)]">
+                  <div className="mb-2 flex items-center justify-between font-mono-tabular text-[11px] font-medium text-[var(--accent-secondary-ink)]">
                     <span>{role.category}</span>
                     <CheckCircle2 size={14} className="text-[var(--status-success)]" aria-hidden="true" />
                   </div>

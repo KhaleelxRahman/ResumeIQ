@@ -1,0 +1,96 @@
+{
+  "roles": [
+    {
+      "slug": "data-analyst",
+      "title": "Data Analyst",
+      "category": "Data & Analytics",
+      "is_core_mandatory": true,
+      "description": "Transforms raw datasets into structured insights, SQL queries, statistical summaries, and executive dashboards.",
+      "skills": [
+        { "canonical_key": "sql", "skill_name": "SQL", "category": "database", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 1 },
+        { "canonical_key": "python", "skill_name": "Python", "category": "language", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 1 },
+        { "canonical_key": "excel", "skill_name": "Excel", "category": "tool", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 2 },
+        { "canonical_key": "pandas", "skill_name": "Pandas", "category": "data_ml", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 2 },
+        { "canonical_key": "data_visualization", "skill_name": "Data Visualization", "category": "concept", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 2 },
+        { "canonical_key": "statistics", "skill_name": "Statistics", "category": "concept", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 3 },
+        { "canonical_key": "power_bi", "skill_name": "Power BI", "category": "tool", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 3 },
+        { "canonical_key": "tableau", "skill_name": "Tableau", "category": "tool", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 3 },
+        { "canonical_key": "postgresql", "skill_name": "PostgreSQL", "category": "database", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 4 },
+        { "canonical_key": "etl", "skill_name": "ETL", "category": "concept", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 4 },
+        { "canonical_key": "numpy", "skill_name": "NumPy", "category": "data_ml", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 4 },
+        { "canonical_key": "r_lang", "skill_name": "R", "category": "language", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 5 },
+        { "canonical_key": "ab_testing", "skill_name": "A/B Testing", "category": "concept", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 5 },
+        { "canonical_key": "git", "skill_name": "Git", "category": "tool", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 4 }
+      ]
+    },
+    {
+      "slug": "web-developer",
+      "title": "Web Developer",
+      "category": "Software Engineering",
+      "is_core_mandatory": true,
+      "description": "Builds responsive, accessible frontend interfaces and reliable REST APIs backed by relational databases.",
+      "skills": [
+        { "canonical_key": "html", "skill_name": "HTML", "category": "language", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 1 },
+        { "canonical_key": "css", "skill_name": "CSS", "category": "language", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 1 },
+        { "canonical_key": "javascript", "skill_name": "JavaScript", "category": "language", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 1 },
+        { "canonical_key": "react", "skill_name": "React", "category": "framework", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 2 },
+        { "canonical_key": "rest_api", "skill_name": "REST API", "category": "concept", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 2 },
+        { "canonical_key": "git", "skill_name": "Git", "category": "tool", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 2 },
+        { "canonical_key": "sql", "skill_name": "SQL", "category": "database", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 3 },
+        { "canonical_key": "typescript", "skill_name": "TypeScript", "category": "language", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 3 },
+        { "canonical_key": "nodejs", "skill_name": "Node.js", "category": "framework", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 3 },
+        { "canonical_key": "flask", "skill_name": "Flask", "category": "framework", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 4 },
+        { "canonical_key": "tailwind", "skill_name": "Tailwind CSS", "category": "framework", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 4 },
+        { "canonical_key": "postgresql", "skill_name": "PostgreSQL", "category": "database", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 4 },
+        { "canonical_key": "docker", "skill_name": "Docker", "category": "cloud", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 5 },
+        { "canonical_key": "ci_cd", "skill_name": "CI/CD", "category": "cloud", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 5 }
+      ]
+    },
+    {
+      "slug": "ai-engineer",
+      "title": "AI Engineer",
+      "category": "Artificial Intelligence & NLP",
+      "is_core_mandatory": true,
+      "description": "Applies Python, classical ML, NLP pipelines, and disciplined model evaluation to build intelligent applications.",
+      "skills": [
+        { "canonical_key": "python", "skill_name": "Python", "category": "language", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 1 },
+        { "canonical_key": "machine_learning", "skill_name": "Machine Learning", "category": "data_ml", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 1 },
+        { "canonical_key": "nlp", "skill_name": "NLP", "category": "data_ml", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 2 },
+        { "canonical_key": "scikit_learn", "skill_name": "Scikit-learn", "category": "data_ml", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 2 },
+        { "canonical_key": "pandas", "skill_name": "Pandas", "category": "data_ml", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 2 },
+        { "canonical_key": "numpy", "skill_name": "NumPy", "category": "data_ml", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 3 },
+        { "canonical_key": "git", "skill_name": "Git", "category": "tool", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 3 },
+        { "canonical_key": "spacy", "skill_name": "spaCy", "category": "data_ml", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 3 },
+        { "canonical_key": "nltk", "skill_name": "NLTK", "category": "data_ml", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 4 },
+        { "canonical_key": "pytorch", "skill_name": "PyTorch", "category": "data_ml", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 4 },
+        { "canonical_key": "tensorflow", "skill_name": "TensorFlow", "category": "data_ml", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 5 },
+        { "canonical_key": "sql", "skill_name": "SQL", "category": "database", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 4 },
+        { "canonical_key": "rest_api", "skill_name": "REST API", "category": "concept", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 4 },
+        { "canonical_key": "docker", "skill_name": "Docker", "category": "cloud", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 5 }
+      ]
+    },
+    {
+      "slug": "cloud-engineer",
+      "title": "Cloud Engineer",
+      "category": "Cloud & Infrastructure",
+      "is_core_mandatory": true,
+      "description": "Designs reproducible cloud infrastructure, containerized deployments, CI/CD pipelines, and secure networking.",
+      "skills": [
+        { "canonical_key": "linux", "skill_name": "Linux", "category": "tool", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 1 },
+        { "canonical_key": "aws", "skill_name": "AWS", "category": "cloud", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 1 },
+        { "canonical_key": "docker", "skill_name": "Docker", "category": "cloud", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 2 },
+        { "canonical_key": "ci_cd", "skill_name": "CI/CD", "category": "cloud", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 2 },
+        { "canonical_key": "git", "skill_name": "Git", "category": "tool", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 2 },
+        { "canonical_key": "networking", "skill_name": "Networking", "category": "concept", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 3 },
+        { "canonical_key": "python", "skill_name": "Python", "category": "language", "requirement_level": "mandatory", "weight": 2.0, "learning_priority": 3 },
+        { "canonical_key": "kubernetes", "skill_name": "Kubernetes", "category": "cloud", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 3 },
+        { "canonical_key": "terraform", "skill_name": "Terraform", "category": "cloud", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 3 },
+        { "canonical_key": "gcp", "skill_name": "GCP", "category": "cloud", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 4 },
+        { "canonical_key": "azure", "skill_name": "Azure", "category": "cloud", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 4 },
+        { "canonical_key": "iam", "skill_name": "IAM", "category": "cloud", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 4 },
+        { "canonical_key": "postgresql", "skill_name": "PostgreSQL", "category": "database", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 5 },
+        { "canonical_key": "monitoring", "skill_name": "Monitoring", "category": "cloud", "requirement_level": "preferred", "weight": 1.0, "learning_priority": 5 }
+      ]
+    }
+  ]
+}

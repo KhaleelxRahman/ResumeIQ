@@ -445,11 +445,11 @@ export function BuilderPage() {
         <div
           role={banner.kind === 'err' ? 'alert' : 'status'}
           aria-live="polite"
-          className={`no-print mb-5 flex items-center gap-2.5 rounded-xl border px-4 py-3 text-xs ${
+          className={`no-print mb-5 flex items-center gap-2.5 rounded-xl border px-4 py-3 text-xs font-medium ${
             banner.kind === 'ok'
-              ? 'border-[var(--status-success)]/40 bg-[var(--status-success)]/10 text-[#86efac]'
+              ? 'border-[var(--status-success)]/35 bg-[var(--status-success-bg)] text-[var(--status-success)]'
               : banner.kind === 'err'
-                ? 'border-[var(--status-danger)]/40 bg-[var(--status-danger)]/10 text-[#fda4af]'
+                ? 'border-[var(--status-danger)]/35 bg-[var(--status-danger-bg)] text-[var(--status-danger)]'
                 : 'border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--text-secondary)]'
           }`}
         >
@@ -458,7 +458,7 @@ export function BuilderPage() {
           ) : banner.kind === 'ok' ? (
             <CheckCircle2 size={15} className="shrink-0" aria-hidden="true" />
           ) : (
-            <Info size={15} className="shrink-0 text-[var(--accent-secondary)]" aria-hidden="true" />
+            <Info size={15} className="shrink-0 text-[var(--accent-secondary-ink)]" aria-hidden="true" />
           )}
           <span>{banner.text}</span>
         </div>

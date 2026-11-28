@@ -20,16 +20,16 @@ export function AppLayout({ children }: { children: ReactNode }) {
           Skip to main content
         </a>
 
-        <header className="sticky top-0 z-40 border-b border-[var(--border-hairline)] bg-[var(--bg-canvas)]/95 backdrop-blur-sm">
-          <div className="mx-auto flex max-w-[1320px] items-center justify-between px-4 py-3.5 sm:px-6">
+        <header className="sticky top-0 z-40 border-b border-[var(--border-hairline)] bg-[var(--bg-canvas)]">
+          <div className="mx-auto flex max-w-[1320px] items-center justify-between gap-8 px-4 py-3.5 sm:px-6">
             <Link
               to="/"
-              className="flex items-center gap-2.5 text-[17px] font-bold tracking-[-0.02em] text-[var(--text-primary)]"
+              className="flex shrink-0 items-center gap-2.5 whitespace-nowrap text-[17px] font-bold tracking-[-0.02em] text-[var(--text-primary)]"
             >
-              <span className="grid h-7 w-7 place-items-center rounded-[6px] border border-[var(--accent-primary)] bg-[var(--bg-surface)] font-mono-tabular text-[11px] text-[var(--accent-secondary)]">
+              <span className="grid h-7 w-7 place-items-center rounded-[6px] border border-[var(--border-strong)] bg-[var(--bg-surface)] font-mono-tabular text-[11px] font-semibold text-[var(--accent-primary)]">
                 IQ
               </span>
-              <span>ResumeIQ</span>
+              <span className="font-display">ResumeIQ</span>
             </Link>
 
             <nav aria-label="Primary Navigation" className="hidden items-center gap-6 md:flex">
@@ -95,12 +95,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <footer className="border-t border-[var(--border-hairline)] bg-[var(--bg-surface)]">
           <div className="mx-auto flex max-w-[1320px] flex-col gap-3 px-4 py-6 text-xs text-[var(--text-secondary)] sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <div className="flex items-center gap-2">
-              <ShieldCheck size={15} className="text-[var(--accent-secondary)]" aria-hidden="true" />
+              <ShieldCheck size={15} className="shrink-0 text-[var(--accent-secondary-ink)]" aria-hidden="true" />
               <span>
                 Free-first student tool. ATS Compatibility is a deterministic simulation estimate, never an employer guarantee.
               </span>
             </div>
-            <span className="font-mono-tabular">ResumeIQ // SkillOrbit Capstone Baseline</span>
+            <span className="font-mono-tabular whitespace-nowrap">ResumeIQ · SkillOrbit Capstone</span>
           </div>
         </footer>
       </div>

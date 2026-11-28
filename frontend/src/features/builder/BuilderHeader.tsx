@@ -84,25 +84,25 @@ export function BuilderHeader({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-2.5 text-xs text-[var(--text-secondary)]">
-            <span className="font-mono-tabular uppercase tracking-wider text-[var(--accent-secondary)]">
+            <span className="font-mono-tabular font-medium uppercase tracking-wider text-[var(--accent-secondary-ink)]">
               Resume Builder
             </span>
             <span aria-hidden="true">•</span>
             <span role="status" aria-live="polite" className="inline-flex items-center gap-1.5 font-medium">
-              {saveStatus === 'saving' && <span className="text-[var(--accent-secondary)]">Saving changes...</span>}
+              {saveStatus === 'saving' && <span className="text-[var(--accent-secondary-ink)]">Saving changes...</span>}
               {saveStatus === 'saved' && (
                 <>
                   <CheckCircle2 size={14} className="text-[var(--status-success)]" aria-hidden="true" />
-                  <span className="text-[#86efac]">
+                  <span className="text-[var(--status-success)]">
                     {savedLabel ? `Saved at ${savedLabel}` : 'Saved to workspace'}
                   </span>
                 </>
               )}
               {saveStatus === 'unsaved' && (
-                <span className="text-[#fcd34d]">Unsaved changes</span>
+                <span className="text-[var(--status-warning)]">Unsaved changes</span>
               )}
               {saveStatus === 'error' && (
-                <span className="text-[#fda4af]">Save failed — review and retry</span>
+                <span className="text-[var(--status-danger)]">Save failed — review and retry</span>
               )}
             </span>
           </div>
@@ -163,7 +163,7 @@ export function BuilderHeader({
             className="min-h-[42px] w-full rounded-lg border border-[var(--border-strong)] bg-[var(--bg-canvas)] px-3 py-2 text-sm text-[var(--text-primary)] disabled:opacity-60"
           />
           {titleError && (
-            <p id="builder-title-error" role="alert" className="mt-1 text-xs text-[#fda4af]">
+            <p id="builder-title-error" role="alert" className="mt-1 text-xs font-medium text-[var(--status-danger)]">
               {titleError}
             </p>
           )}
@@ -311,7 +311,7 @@ export function BuilderHeader({
                 type="button"
                 disabled={anyBusy}
                 onClick={onRequestDelete}
-                className="inline-flex min-h-[42px] items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg border border-[var(--status-danger)]/40 bg-[var(--bg-canvas)] px-3 text-xs font-medium text-[#fda4af] hover:bg-[var(--status-danger)]/10 disabled:opacity-50"
+                className="inline-flex min-h-[42px] items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg border border-[var(--status-danger)]/40 bg-[var(--bg-surface)] px-3 text-xs font-medium text-[var(--status-danger)] hover:bg-[var(--status-danger-bg)] disabled:opacity-50"
               >
                 <Trash2 size={14} aria-hidden="true" />
                 <span>Delete Resume</span>
